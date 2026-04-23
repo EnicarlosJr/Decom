@@ -1,0 +1,60 @@
+{% load socialaccount %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <style>
+        .debug-box { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; margin-top: 20px; font-family: monospace; }
+        .status-ok { color: green; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+        .messages { list-style: none; padding: 0; }
+        .message { margin: 12px 0; padding: 10px; border-radius: 6px; }
+        .message.error { background: #ffe5e5; color: #8a1f1f; border: 1px solid #f1b3b3; }
+    </style>
+</head>
+<body>
+    <h1>Bem-vindo ao DECOM</h1>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="message {{ message.tags|default:'error' }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    <div class="session-info">
+        {% if user.is_authenticated %}
+            <p class="status-ok">Logado como: {{ user.email }}</p>
+            <p>ID do Usuário: {{ user.id }} | Superuser: {{ user.is_superuser }}</p>
+            <a href="{% url 'account_logout' %}">Sair (Logout)</a>
+        {% else %}
+            <p class="status-error">Usuário não autenticado.</p>
+            
+            {% get_providers as socialaccount_providers %}
+            <h3>Provedores disponíveis:</h3>
+            <ul>
+                {% for provider in socialaccount_providers %}
+                    <li>
+                        {{ provider.name }} (ID: {{ provider.id }}) 
+                        {% if provider.id == 'google' %}
+                            -> <a href="{% provider_login_url 'google' %}"><strong>Login com Google</strong></a>
+                        {% endif %}
+                    </li>
+                {% empty %}
+                    <li>Nenhum provedor social configurado no banco de dados.</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    {% if debug %}
+    <div class="debug-box">
+        <h3>🔧 Painel de Debug</h3>
+        <p>Site ID atual: {{ request.site.id }}</p>
+        <p>Domínio do Site: {{ request.site.domain }}</p>
+        <p>Provedores detectados: {{ socialaccount_providers|length }}</p>
+    </div>
+    {% endif %}
+</body>
+</html>
