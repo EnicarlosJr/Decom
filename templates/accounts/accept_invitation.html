@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Convite | DECOM{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <div class="surface-panel rounded-[2rem] p-7 sm:p-8">
+        <p class="section-label">Convite</p>
+        <h2 class="font-display mt-3 text-4xl text-gov.deep">
+            {% if invitation %}{{ invitation.email }}{% else %}Link de convite{% endif %}
+        </h2>
+
+        {% if invitation_status == "ready" %}
+            <p class="mt-4 text-sm leading-7 text-slate-600">
+                Este convite esta pronto para uso e expira em <strong>{{ invitation.expires_at|date:"d/m/Y H:i" }}</strong>.
+            </p>
+        {% elif invitation_status == "accepted" %}
+            <p class="mt-4 text-sm leading-7 text-slate-600">
+                Este convite ja foi utilizado.
+            </p>
+        {% elif invitation_status == "invalid" %}
+            <p class="mt-4 text-sm leading-7 text-slate-600">
+                Este link nao corresponde a um convite valido. Ele pode ter expirado, sido substituido por um reenvio ou estar incompleto.
+            </p>
+        {% else %}
+            <p class="mt-4 text-sm leading-7 text-slate-600">
+                Este convite expirou. Solicite um novo link.
+            </p>
+        {% endif %}
+
+        <div class="mt-8">
+            {% if invitation_status == "ready" %}
+                {% if social_login_url %}
+                    <a href="{{ social_login_url }}" class="btn-primary w-full px-5 py-4 text-sm">
+                        Continuar
+                    </a>
+                {% else %}
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+                        O login institucional nao esta disponivel neste ambiente.
+                    </div>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'accounts:login_request' %}" class="btn-secondary w-full px-5 py-4 text-sm">
+                    Ir para login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

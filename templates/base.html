@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Portal DECOM{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gov: {
+                            deep: "#152338",
+                            blue: "#355b88",
+                            green: "#2f6a4f",
+                            mint: "#e7f2eb",
+                            sand: "#f3ede4",
+                            gold: "#c47a3d"
+                        }
+                    },
+                    boxShadow: {
+                        panel: "0 24px 52px rgba(21, 35, 56, 0.10)"
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+            --gov-deep: #152338;
+            --page-line: rgba(21, 35, 56, 0.08);
+            --panel-bg: rgba(255, 255, 255, 0.9);
+            --panel-border: rgba(255, 255, 255, 0.7);
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: "Manrope", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(196, 122, 61, 0.08), transparent 28%),
+                radial-gradient(circle at top right, rgba(53, 91, 136, 0.08), transparent 24%),
+                linear-gradient(180deg, #fbf8f3 0%, #f5f7fb 54%, #eef2f7 100%);
+        }
+        .font-display {
+            font-family: "Fraunces", Georgia, serif;
+            font-variation-settings: "SOFT" 40, "WONK" 0;
+        }
+        .skip-link {
+            position: absolute;
+            left: 1rem;
+            top: -4rem;
+            z-index: 50;
+            border-radius: 9999px;
+            background: var(--gov-deep);
+            color: #ffffff;
+            font-weight: 700;
+            padding: 0.875rem 1.25rem;
+            transition: top 0.2s ease;
+        }
+        .skip-link:focus {
+            top: 1rem;
+        }
+        .field-input {
+            background: #ffffff;
+            color: #0f172a;
+        }
+        .field-input::placeholder {
+            color: #64748b;
+            opacity: 1;
+        }
+        .field-input:-webkit-autofill,
+        .field-input:-webkit-autofill:hover,
+        .field-input:-webkit-autofill:focus {
+            -webkit-text-fill-color: #0f172a;
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+            transition: background-color 9999s ease-in-out 0s;
+        }
+        .field-code {
+            font-variant-numeric: tabular-nums;
+        }
+        .surface-panel {
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            box-shadow: 0 24px 52px rgba(21, 35, 56, 0.10);
+            backdrop-filter: blur(12px);
+        }
+        .surface-soft {
+            border: 1px solid rgba(236, 228, 217, 1);
+            background: rgba(243, 237, 228, 0.72);
+        }
+        .section-label {
+            color: #2f6a4f;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            background: #152338;
+            color: #ffffff;
+            font-weight: 700;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: #355b88;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            border: 1px solid #152338;
+            color: #152338;
+            font-weight: 700;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: #f3ede4;
+        }
+        .btn-light {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            background: #ffffff;
+            color: #152338;
+            font-weight: 700;
+            transition: background-color 0.2s ease;
+        }
+        .btn-light:hover {
+            background: #f3ede4;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-900 antialiased">
+    <a href="#conteudo" class="skip-link">Ir para o conteudo</a>
+    {% include "navbar.html" %}
+    <main id="conteudo" class="pb-16">
+        {% if messages %}
+            <section class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+                {% for message in messages %}
+                    <div class="mb-3 rounded-2xl border px-4 py-3 text-sm shadow-sm {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-900{% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-900{% else %}border-[var(--page-line)] bg-white/90 text-slate-800{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    {% include "footer.html" %}
+</body>
+</html>
