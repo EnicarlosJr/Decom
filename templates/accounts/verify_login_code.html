@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Verificar Login | DECOM{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <div class="surface-panel rounded-[2rem] p-7 sm:p-8">
+        <p class="section-label">Validacao</p>
+        <h2 class="font-display mt-3 text-4xl text-gov.deep">Confirmar codigo</h2>
+        <p class="mt-4 text-sm leading-7 text-slate-600">
+            Digite o codigo enviado para <strong>{{ pending_email }}</strong>.
+        </p>
+        <p class="mt-2 text-sm text-slate-500">
+            Expira em {{ expires_at|date:"H:i" }}. Tentativas restantes: {{ remaining_attempts }}.
+        </p>
+
+        <form method="post" class="mt-8 space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.code.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
+                    {{ form.code.label }}
+                </label>
+                {{ form.code }}
+                {% if form.code.errors %}
+                    <p class="mt-2 text-sm font-medium text-rose-700">{{ form.code.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn-primary w-full px-5 py-4 text-sm">
+                Entrar
+            </button>
+        </form>
+
+        <p class="mt-6 text-sm leading-7 text-slate-600">
+            Nao recebeu? <a href="{% url 'accounts:login_request' %}" class="font-bold text-gov.blue">Solicitar novo codigo</a>.
+        </p>
+    </div>
+</section>
+{% endblock %}

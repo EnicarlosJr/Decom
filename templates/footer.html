@@ -1,0 +1,18 @@
+<footer class="border-t border-white/60 bg-white/70 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-slate-600 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div>
+            <p class="font-semibold text-gov.deep">Portal DECOM</p>
+            <p class="mt-1">Departamento de Computacao</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+            <a href="{% url 'home:index' %}" class="transition hover:text-gov.deep">Inicio</a>
+            <a href="{% url 'home:index' %}#servicos" class="transition hover:text-gov.deep">Conteudo</a>
+            <a href="{% url 'home:index' %}#contato" class="transition hover:text-gov.deep">Contato</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:dashboard' %}" class="transition hover:text-gov.deep">Painel</a>
+            {% else %}
+                <a href="{% url 'accounts:login_request' %}" class="transition hover:text-gov.deep">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</footer>

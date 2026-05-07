@@ -1,0 +1,54 @@
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import LandingPageContent
+
+
+User = get_user_model()
+
+
+class HomeViewTests(TestCase):
+    def test_home_page_loads(self):
+        response = self.client.get(reverse("home:index"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Departamento de Computacao")
+
+    def test_home_page_uses_saved_landing_content(self):
+        page = LandingPageContent.get_solo()
+        page.hero_title = "Portal customizado para os usuarios"
+        page.save(update_fields=["hero_title", "updated_at"])
+
+        response = self.client.get(reverse("home:index"))
+
+        self.assertContains(response, "Portal customizado para os usuarios")
+
+    def test_landing_editor_requires_authorized_user(self):
+        user = User.objects.create_user(
+            username="visitante",
+            email="visitante@ufvjm.edu.br",
+        )
+        user.set_unusable_password()
+        user.save()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("home:landing_editor"))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_landing_editor_is_available_for_front_manager(self):
+        user = User.objects.create_user(
+            username="conteudo",
+            email="conteudo@ufvjm.edu.br",
+        )
+        user.set_unusable_password()
+        user.save()
+        user.profile.can_manage_landing_page = True
+        user.profile.save(update_fields=["can_manage_landing_page", "updated_at"])
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("home:landing_editor"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Editar landing page")
