@@ -9,7 +9,8 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-
+from django.core.mail import send_mail
+from django.urls import reverse
 
 # Obtém o modelo de usuário (pode ser customizado no projeto)
 User = get_user_model()
@@ -249,6 +250,50 @@ class AccessInvitation(models.Model):
         self.accepted_user = user
         self.accepted_at = timezone.now()
         self.save(update_fields=["accepted_user", "accepted_at", "updated_at"])
+
+
+    def build_acceptance_url(self, request=None):
+        """
+        Monta o link do convite que leva para a view accept_invitation.
+        Essa view já integra com o fluxo do allauth.
+        """
+        path = reverse("accounts:accept_invitation", args=[self.token])
+
+        if request is not None:
+            return request.build_absolute_uri(path)
+
+        base_url = getattr(settings, "SITE_BASE_URL", "").rstrip("/")
+        return f"{base_url}{path}"
+
+
+    def send_invitation_email(self, request=None):
+        """
+        Envia o convite de primeiro acesso.
+        O usuário clica no link, cai em accept_invitation,
+        e dali segue para o login social institucional.
+        """
+        acceptance_url = self.build_acceptance_url(request)
+
+        send_mail(
+            subject="Convite de acesso ao portal DECOM",
+            message=(
+                f"Olá,\n\n"
+                f"Você recebeu um convite para acessar o portal DECOM.\n\n"
+                f"Use o link abaixo para iniciar seu primeiro acesso:\n\n"
+                f"{acceptance_url}\n\n"
+                f"Após abrir o link, entre com sua conta institucional.\n\n"
+                f"Esse convite expira em {self.expires_at:%d/%m/%Y às %H:%M}."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[self.email],
+            fail_silently=False,
+        )
+
+        type(self).objects.filter(pk=self.pk).update(
+            sent_at=timezone.now(),
+            updated_at=timezone.now(),
+        )
+        self.sent_at = timezone.now()
 
 
 class LoginCode(models.Model):

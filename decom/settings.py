@@ -1,12 +1,10 @@
-"""Configuracoes centrais do projeto Django do portal DECOM."""
-
 import os
 from importlib.util import find_spec
 from pathlib import Path
-
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = "django-insecure-r6-8f%kr$-yoekkj20p!$qji8me!=eidcjy2dbz*&p+1de5ze+"
 
