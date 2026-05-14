@@ -251,6 +251,13 @@ class AccessInvitation(models.Model):
         self.accepted_at = timezone.now()
         self.save(update_fields=["accepted_user", "accepted_at", "updated_at"])
 
+    def renew(self):
+        """Renova a validade mantendo o mesmo token de convite."""
+        days = getattr(settings, "INVITATION_TTL_DAYS", 7)
+        self.expires_at = timezone.now() + timedelta(days=days)
+        self.sent_at = None
+        self.save(update_fields=["expires_at", "sent_at", "updated_at"])
+
 
     def build_acceptance_url(self, request=None):
         """
@@ -359,6 +366,28 @@ class LoginCode(models.Model):
         )
 
         return code, raw_code
+
+    @classmethod
+    def get_active_for_user(cls, user):
+        """Retorna o codigo mais recente ainda valido para o usuario."""
+        now = timezone.now()
+        max_attempts = getattr(settings, "LOGIN_CODE_MAX_ATTEMPTS", 5)
+        return (
+            cls.objects.filter(
+                user=user,
+                consumed_at__isnull=True,
+                expires_at__gt=now,
+                attempts__lt=max_attempts,
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+    @property
+    def remaining_attempts(self):
+        """Informa quantas tentativas ainda restam para o codigo atual."""
+        max_attempts = getattr(settings, "LOGIN_CODE_MAX_ATTEMPTS", 5)
+        return max(max_attempts - self.attempts, 0)
 
     def verify(self, raw_code):
         """

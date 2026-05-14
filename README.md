@@ -98,6 +98,13 @@ Quando o login social nao estiver disponivel no ambiente:
 - `/conteudo/landing/`: editor da landing
 - `/admin/`: admin nativo do Django
 
+## Interface atual
+
+- O cabecalho usa componentes do DSGov com dropdown local para o menu da conta.
+- O menu do usuario autenticado fica em `templates/navbar.html`.
+- A inicializacao compartilhada de componentes e comportamentos de dropdown fica em `templates/base.html`.
+- O painel de convites foi reduzido para um fluxo direto: criar, filtrar, listar e reenviar.
+
 ## Configuracao
 
 ### E-mail

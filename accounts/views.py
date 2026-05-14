@@ -58,10 +58,23 @@ def _build_invitation_rows(request, invitations):
     """Prepara URLs absolutas para a listagem de convites na interface."""
     rows = []
     for invitation in invitations:
+        if invitation.accepted_at:
+            status_label = "Aceito"
+            status_tone = "success"
+        elif invitation.is_expired:
+            status_label = "Expirado"
+            status_tone = "danger"
+        else:
+            status_label = "Pendente"
+            status_tone = "info"
+
         rows.append(
             {
                 "obj": invitation,
                 "acceptance_url": invitation.build_acceptance_url(request),
+                "status_label": status_label,
+                "status_tone": status_tone,
+                "can_resend": invitation.accepted_at is None,
             }
         )
     return rows
@@ -69,22 +82,19 @@ def _build_invitation_rows(request, invitations):
 
 def _build_access_modules(user, profile):
     """Define os blocos operacionais exibidos no painel do usuario."""
-    modules = [
-        {
-            "title": "Minha conta",
-            "description": "Dados pessoais, acesso atual e informacoes basicas do usuario.",
-            "status": "Disponivel",
-            "tone": "ready",
-        },
-    ]
+    modules = []
 
     if user.is_staff:
         modules.append(
             {
                 "title": "Convites",
-                "description": "Criar, reenviar e acompanhar liberacoes de acesso.",
-                "status": "Admin",
-                "tone": "restricted",
+                "description": "Criacao, reenvio e acompanhamento de primeiro acesso.",
+                "status": "Equipe",
+                "tone": "info",
+                "action_label": "Abrir painel",
+                "action_url": reverse("accounts:invitation_panel"),
+                "button_tone": "secondary",
+                "icon": "fa-envelope-open-text",
             }
         )
 
@@ -92,9 +102,13 @@ def _build_access_modules(user, profile):
         modules.append(
             {
                 "title": "Landing page",
-                "description": "Editar a capa publica do portal sem alterar o layout.",
+                "description": "Edicao do conteudo publico sem alterar a estrutura da pagina.",
                 "status": "Editor",
-                "tone": "restricted",
+                "tone": "primary",
+                "action_label": "Abrir editor",
+                "action_url": reverse("home:landing_editor"),
+                "button_tone": "primary",
+                "icon": "fa-pen",
             }
         )
 
@@ -307,6 +321,11 @@ def dashboard(request):
         "accounts/dashboard.html",
         {
             "profile": profile,
+            "display_name": (
+                profile.display_name if profile and profile.display_name else (
+                    request.user.get_full_name() or request.user.email
+                )
+            ),
             "role_labels": role_labels,
             "access_modules": access_modules,
             "can_manage_landing_page": can_manage_landing_page,
@@ -374,24 +393,18 @@ def invitation_panel(request):
     elif status == "expired":
         filtered_queryset = filtered_queryset.filter(accepted_at__isnull=True, expires_at__lte=now)
 
-    invitations = list(base_queryset)
-    metrics = {
-        "total": len(invitations),
-        "pending": sum(1 for invitation in invitations if invitation.is_usable),
-        "accepted": sum(1 for invitation in invitations if invitation.accepted_at is not None),
-        "expired": sum(1 for invitation in invitations if invitation.is_expired and invitation.accepted_at is None),
-    }
+    invitation_rows = _build_invitation_rows(request, list(filtered_queryset))
     return render(
         request,
         "accounts/invitation_panel.html",
         {
             "form": form,
-            "metrics": metrics,
-            "social_login_url": _get_social_login_url(),
-            "invitation_rows": _build_invitation_rows(request, list(filtered_queryset)),
+            "invitation_rows": invitation_rows,
+            "result_count": len(invitation_rows),
             "filters": {
                 "query": query,
                 "status": status,
+                "has_active_filters": bool(query or status != "all"),
             },
         },
     )

@@ -15,6 +15,17 @@ class HomeViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Departamento de Computacao")
 
+    def test_default_landing_starts_without_sample_public_content(self):
+        page = LandingPageContent.get_solo()
+
+        self.assertEqual(page.hero_title, "")
+        self.assertFalse(page.items.exists())
+
+        response = self.client.get(reverse("home:index"))
+
+        self.assertNotContains(response, "Primeiro acesso por convite")
+        self.assertNotContains(response, "Nenhum card principal foi publicado ainda")
+
     def test_home_page_uses_saved_landing_content(self):
         page = LandingPageContent.get_solo()
         page.hero_title = "Portal customizado para os usuarios"

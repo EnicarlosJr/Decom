@@ -1,37 +1,96 @@
-<header class="sticky top-0 z-40 border-b border-white/60 bg-white/82 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <a href="{% url 'home:index' %}" class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-gov.deep text-sm font-extrabold uppercase tracking-[0.22em] text-white">
-                DE
+<header class="br-header" id="header" data-sticky="data-sticky">
+    <div class="container-lg">
+        <div class="header-top">
+            <div class="header-logo">
+                <img src="https://www.decom.ufvjm.edu.br/dc2020/wp-content/uploads/2020/03/logo_topo.png"
+                     alt="Portal DECOM" />
+                <span class="br-divider vertical"></span>
+                <div class="header-sign">Portal DECOM</div>
             </div>
-            <div>
-                <p class="text-xs font-bold uppercase tracking-[0.26em] text-gov.green">Departamento de Computacao</p>
-                <h1 class="text-lg font-extrabold text-gov.deep">Portal DECOM</h1>
-            </div>
-        </a>
 
-        <div class="flex flex-col gap-3 lg:items-end">
-            <nav class="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-700">
-                <a href="{% url 'home:index' %}" class="rounded-full px-4 py-2 transition hover:bg-gov.sand hover:text-gov.deep">Inicio</a>
-                <a href="{% url 'home:index' %}#servicos" class="rounded-full px-4 py-2 transition hover:bg-gov.sand hover:text-gov.deep">Conteudo</a>
-                <a href="{% url 'home:index' %}#contato" class="rounded-full px-4 py-2 transition hover:bg-gov.sand hover:text-gov.deep">Contato</a>
-                {% if user.is_authenticated %}
-                    <a href="{% url 'accounts:dashboard' %}" class="rounded-full px-4 py-2 transition hover:bg-gov.sand hover:text-gov.deep">Painel</a>
-                    {% if user.is_staff %}
-                        <a href="{% url 'accounts:invitation_panel' %}" class="rounded-full px-4 py-2 transition hover:bg-gov.sand hover:text-gov.deep">Convites</a>
-                    {% endif %}
-                    <form action="{% url 'accounts:logout' %}" method="post" class="inline-flex">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-secondary px-4 py-2">
-                            Logout
-                        </button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'accounts:login_request' %}" class="btn-primary px-4 py-2">
-                        Login
-                    </a>
-                {% endif %}
-            </nav>
+            <div class="header-actions">
+                <div class="header-links dropdown">
+                    <button class="br-button circle small" type="button"
+                            data-toggle="dropdown"
+                            aria-label="Abrir acesso rapido"
+                            aria-expanded="false"
+                            aria-controls="header-quick-links">
+                        <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                    </button>
+                    <div id="header-quick-links" class="br-list">
+                        <div class="header">
+                            <div class="title">Acesso rapido</div>
+                        </div>
+                        <a class="br-item" href="{% url 'home:index' %}">
+                            <div class="content">Inicio</div>
+                        </a>
+                        <a class="br-item" href="{% url 'home:index' %}#servicos">
+                            <div class="content">Conteudo</div>
+                        </a>
+                        <a class="br-item" href="{% url 'home:index' %}#contato">
+                            <div class="content">Contato</div>
+                        </a>
+                    </div>
+                </div>
+
+                <span class="br-divider vertical mx-half mx-sm-1"></span>
+
+                <div class="header-login">
+                    <div class="header-sign-in">
+                        {% if user.is_authenticated %}
+                            <div class="dropdown">
+                                <button class="br-sign-in small" type="button"
+                                        data-toggle="dropdown"
+                                        aria-label="Abrir menu da conta"
+                                        aria-expanded="false"
+                                        aria-controls="header-account-menu">
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                    <span class="d-sm-inline">
+                                        {{ user.get_full_name|default:user.email|truncatechars:20 }}
+                                    </span>
+                                </button>
+                                <div id="header-account-menu" class="br-list">
+                                    <div class="header">
+                                        <div class="title">Minha conta</div>
+                                    </div>
+                                    <a class="br-item" href="{% url 'accounts:dashboard' %}">
+                                        <div class="content">Painel</div>
+                                    </a>
+                                    {% if user.is_staff %}
+                                        <a class="br-item" href="{% url 'accounts:invitation_panel' %}">
+                                            <div class="content">Convites</div>
+                                        </a>
+                                    {% endif %}
+                                    <span class="br-divider"></span>
+                                    <div class="br-item">
+                                        <form action="{% url 'accounts:logout' %}" method="post">
+                                            {% csrf_token %}
+                                            <button type="submit" class="br-button secondary small block">
+                                                <i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>
+                                                Sair
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{% url 'accounts:login_request' %}" class="br-sign-in small">
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                                <span class="d-sm-inline">Entrar</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-bottom">
+            <div class="header-menu">
+                <div class="header-info">
+                    <div class="header-title">Departamento de Computacao</div>
+                    <div class="header-subtitle">Portal institucional</div>
+                </div>
+            </div>
         </div>
     </div>
 </header>

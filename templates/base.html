@@ -3,161 +3,181 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{% block title %}Portal DECOM{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        gov: {
-                            deep: "#152338",
-                            blue: "#355b88",
-                            green: "#2f6a4f",
-                            mint: "#e7f2eb",
-                            sand: "#f3ede4",
-                            gold: "#c47a3d"
-                        }
-                    },
-                    boxShadow: {
-                        panel: "0 24px 52px rgba(21, 35, 56, 0.10)"
-                    }
-                }
-            }
-        };
-    </script>
+
+    <link rel="stylesheet"
+          href="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/fonts/rawline/css/rawline.css" />
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,600,700,800,900&amp;display=swap" />
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.css" />
     <style>
-        :root {
-            color-scheme: light;
-            --gov-deep: #152338;
-            --page-line: rgba(21, 35, 56, 0.08);
-            --panel-bg: rgba(255, 255, 255, 0.9);
-            --panel-border: rgba(255, 255, 255, 0.7);
-        }
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            font-family: "Manrope", "Segoe UI", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(196, 122, 61, 0.08), transparent 28%),
-                radial-gradient(circle at top right, rgba(53, 91, 136, 0.08), transparent 24%),
-                linear-gradient(180deg, #fbf8f3 0%, #f5f7fb 54%, #eef2f7 100%);
-        }
-        .font-display {
-            font-family: "Fraunces", Georgia, serif;
-            font-variation-settings: "SOFT" 40, "WONK" 0;
-        }
-        .skip-link {
-            position: absolute;
-            left: 1rem;
-            top: -4rem;
-            z-index: 50;
-            border-radius: 9999px;
-            background: var(--gov-deep);
-            color: #ffffff;
-            font-weight: 700;
-            padding: 0.875rem 1.25rem;
-            transition: top 0.2s ease;
-        }
-        .skip-link:focus {
-            top: 1rem;
-        }
-        .field-input {
-            background: #ffffff;
-            color: #0f172a;
-        }
-        .field-input::placeholder {
-            color: #64748b;
-            opacity: 1;
-        }
-        .field-input:-webkit-autofill,
-        .field-input:-webkit-autofill:hover,
-        .field-input:-webkit-autofill:focus {
-            -webkit-text-fill-color: #0f172a;
-            -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
-            transition: background-color 9999s ease-in-out 0s;
-        }
-        .field-code {
-            font-variant-numeric: tabular-nums;
-        }
-        .surface-panel {
-            border: 1px solid var(--panel-border);
-            background: var(--panel-bg);
-            box-shadow: 0 24px 52px rgba(21, 35, 56, 0.10);
-            backdrop-filter: blur(12px);
-        }
-        .surface-soft {
-            border: 1px solid rgba(236, 228, 217, 1);
-            background: rgba(243, 237, 228, 0.72);
-        }
-        .section-label {
-            color: #2f6a4f;
-            font-size: 0.75rem;
-            font-weight: 800;
-            letter-spacing: 0.28em;
-            text-transform: uppercase;
-        }
-        .btn-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9999px;
-            background: #152338;
-            color: #ffffff;
-            font-weight: 700;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        .btn-primary:hover {
-            background: #355b88;
-            transform: translateY(-1px);
-        }
-        .btn-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9999px;
-            border: 1px solid #152338;
-            color: #152338;
-            font-weight: 700;
-            transition: background-color 0.2s ease, color 0.2s ease;
-        }
-        .btn-secondary:hover {
-            background: #f3ede4;
-        }
-        .btn-light {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9999px;
-            background: #ffffff;
-            color: #152338;
-            font-weight: 700;
-            transition: background-color 0.2s ease;
-        }
-        .btn-light:hover {
-            background: #f3ede4;
+        .ds-form-fieldset {
+            border: 0;
+            margin: 0;
+            min-width: 0;
+            padding: 0;
         }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="min-h-screen text-slate-900 antialiased">
-    <a href="#conteudo" class="skip-link">Ir para o conteudo</a>
-    {% include "navbar.html" %}
-    <main id="conteudo" class="pb-16">
-        {% if messages %}
-            <section class="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-                {% for message in messages %}
-                    <div class="mb-3 rounded-2xl border px-4 py-3 text-sm shadow-sm {% if message.tags == 'success' %}border-emerald-200 bg-emerald-50 text-emerald-900{% elif message.tags == 'error' %}border-rose-200 bg-rose-50 text-rose-900{% else %}border-[var(--page-line)] bg-white/90 text-slate-800{% endif %}">
-                        {{ message }}
+
+<body>
+    <div class="template-base">
+        <div class="br-skiplink">
+            <a class="br-item" href="#main-content" accesskey="1">
+                Ir para o conteudo (1/3)
+                <span class="br-tag text ml-1">1</span>
+            </a>
+            <a class="br-item" href="#header" accesskey="2">
+                Ir para o menu (2/3)
+                <span class="br-tag text ml-1">2</span>
+            </a>
+            <a class="br-item" href="#footer" accesskey="3">
+                Ir para o rodape (3/3)
+                <span class="br-tag text ml-1">3</span>
+            </a>
+        </div>
+
+        {% include "navbar.html" %}
+
+        <main id="main" class="d-flex flex-fill">
+            <div class="container-lg d-flex">
+                <div class="row w-100">
+                    <div class="col pt-3 pb-5">
+                        {% if messages %}
+                            <div class="mb-4">
+                                {% for message in messages %}
+                                    <div class="br-message {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %} mb-2"
+                                         role="alert">
+                                        <div class="icon">
+                                            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-times-circle{% else %}fa-info-circle{% endif %} fa-lg"
+                                               aria-hidden="true"></i>
+                                        </div>
+                                        <div class="content">
+                                            <span class="message-body">{{ message }}</span>
+                                        </div>
+                                        <div class="close">
+                                            <button class="br-button circle small" type="button"
+                                                    aria-label="Fechar mensagem"
+                                                    onclick="this.closest('.br-message').remove()">
+                                                <i class="fas fa-times" aria-hidden="true"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <div id="main-content" class="main-content">
+                            {% block content %}{% endblock %}
+                        </div>
                     </div>
-                {% endfor %}
-            </section>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
-    {% include "footer.html" %}
+                </div>
+            </div>
+        </main>
+
+        {% include "footer.html" %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@govbr-ds/core@3.7.0/dist/core.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const initComponent = function (selector, ctorName, componentName) {
+                if (!window.core || !core[ctorName]) return;
+                for (const el of document.querySelectorAll(selector)) {
+                    new core[ctorName](componentName, el);
+                }
+            };
+
+            const initHeaderComponent = function () {
+                if (!window.core || !core.BRHeader) return;
+                for (const el of document.querySelectorAll('.br-header')) {
+                    const hasDsMenuTrigger = el.querySelector('.header-menu-trigger [data-toggle="menu"]');
+                    const hasDsFunctions = el.querySelector('.header-functions.dropdown');
+                    if (hasDsMenuTrigger && hasDsFunctions) {
+                        new core.BRHeader('br-header', el);
+                    }
+                }
+            };
+
+            initComponent('.br-message', 'BRAlert', 'br-message');
+            initComponent('.br-input', 'BRInput', 'br-input');
+            document.querySelectorAll('.br-select').forEach(function(el) {
+
+                const select = el.querySelector('select');
+
+                if (!select) return;
+
+                try {
+                    new core.BRSelect('br-select', el);
+                } catch (e) {
+                    console.warn('Erro ao iniciar BRSelect:', e);
+                }
+
+            });
+            initComponent('.br-textarea', 'BRTextarea', 'br-textarea');
+            initComponent('.br-checkbox', 'BRCheckbox', 'br-checkbox');
+            initComponent('.br-footer', 'BRFooter', 'br-footer');
+            initHeaderComponent();
+
+            const dropdowns = Array.from(document.querySelectorAll('.dropdown'));
+
+            const closeDropdown = function (dropdown) {
+                if (!dropdown) return;
+                dropdown.classList.remove('show');
+                const trigger = dropdown.querySelector('[data-toggle="dropdown"]');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            };
+
+            const openDropdown = function (dropdown) {
+                if (!dropdown) return;
+                dropdown.classList.add('show');
+                const trigger = dropdown.querySelector('[data-toggle="dropdown"]');
+                if (trigger) trigger.setAttribute('aria-expanded', 'true');
+            };
+
+            document.addEventListener('click', function (event) {
+                const trigger = event.target.closest('.dropdown [data-toggle="dropdown"]');
+                if (trigger) {
+                    event.preventDefault();
+                    const dropdown = trigger.closest('.dropdown');
+                    const shouldOpen = !dropdown.classList.contains('show');
+
+                    dropdowns.forEach(function (item) {
+                        if (item !== dropdown) closeDropdown(item);
+                    });
+
+                    if (shouldOpen) openDropdown(dropdown);
+                    else closeDropdown(dropdown);
+                    return;
+                }
+
+                if (!event.target.closest('.dropdown')) {
+                    dropdowns.forEach(closeDropdown);
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    dropdowns.forEach(closeDropdown);
+                }
+            });
+
+            for (const dropdown of dropdowns) {
+                for (const item of dropdown.querySelectorAll('.br-item')) {
+                    item.addEventListener('click', function () {
+                        closeDropdown(dropdown);
+                    });
+                }
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

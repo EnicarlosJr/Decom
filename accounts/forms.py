@@ -12,10 +12,7 @@ User = get_user_model()
 
 
 FIELD_INPUT_CLASS = (
-    "field-input block w-full rounded-2xl border border-slate-300 "
-    "bg-white px-4 py-4 text-slate-900 placeholder-slate-400 shadow-sm "
-    "outline-none transition focus:border-gov.blue focus:ring-4 "
-    "focus:ring-[rgba(53,91,136,0.12)]"
+    ""
 )
 
 
@@ -40,6 +37,7 @@ class RequestLoginCodeForm(forms.Form):
 
     email = forms.EmailField(
         label="E-mail institucional",
+        help_text="Use o endereco institucional autorizado para receber o codigo de acesso.",
         widget=forms.EmailInput(
             attrs={
                 "class": FIELD_INPUT_CLASS,
@@ -66,6 +64,7 @@ class VerifyLoginCodeForm(forms.Form):
 
     code = forms.CharField(
         label="Codigo de acesso",
+        help_text="Informe os 6 digitos enviados para o seu e-mail institucional.",
         min_length=6,
         max_length=6,
         strip=True,
@@ -161,10 +160,11 @@ class AccessInvitationSiteForm(forms.Form):
 
     email = forms.EmailField(
         label="E-mail institucional",
+        help_text="O convite sera enviado para este endereco.",
         widget=forms.EmailInput(
             attrs={
                 "class": FIELD_INPUT_CLASS,
-                "placeholder": "aluno@ufvjm.edu.br",
+                "placeholder": "usuario@ufvjm.edu.br",
                 "autocomplete": "email",
                 "autocapitalize": "off",
                 "spellcheck": "false",
@@ -172,17 +172,14 @@ class AccessInvitationSiteForm(forms.Form):
         ),
     )
     notes = forms.CharField(
-        label="Observacoes",
+        label="Observacoes internas",
+        help_text="Campo opcional para contexto administrativo.",
         required=False,
         widget=forms.Textarea(
             attrs={
-                    "class": (
-                        "field-input block min-h-28 w-full rounded-2xl border border-slate-300 "
-                        "bg-white px-4 py-4 text-slate-900 placeholder-slate-400 shadow-sm "
-                        "outline-none transition focus:border-gov.blue focus:ring-4 "
-                        "focus:ring-[rgba(53,91,136,0.12)]"
-                    ),
-                "placeholder": "Turma, curso, observacoes internas ou contexto do convite.",
+                "class": "",
+                "rows": 4,
+                "placeholder": "Curso, turma ou contexto interno.",
             }
         ),
     )

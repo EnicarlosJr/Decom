@@ -99,6 +99,19 @@ Classes utilitarias principais:
 - `.btn-secondary`
 - `.btn-light`
 
+### Cabecalho e dropdown da conta
+
+- o cabecalho atual reaproveita o estilo do DSGov, mas nao usa o markup completo exigido por `BRHeader`
+- por isso a inicializacao do header em `templates/base.html` e defensiva
+- o dropdown da conta autenticada usa estrutura em `templates/navbar.html` com controle local de abrir, fechar, clique fora, `Esc` e `resize`
+- a classe `header-account` existe para manter o menu do usuario fechado por padrao em desktop e mobile
+
+### Painel de convites
+
+- `templates/accounts/invitation_panel.html` segue um fluxo enxuto
+- a tela foi reduzida para formulario de criacao, filtros e tabela de convites
+- metricas, modais extras e acoes sem fluxo implementado foram removidos para manter consistencia operacional
+
 ## Pontos de extensao
 
 ### Novos modulos internos
