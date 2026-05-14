@@ -1,18 +1,76 @@
-<footer class="border-t border-white/60 bg-white/70 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-slate-600 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <div>
-            <p class="font-semibold text-gov.deep">Portal DECOM</p>
-            <p class="mt-1">Departamento de Computacao</p>
+<footer class="br-footer" id="footer">
+    <div class="container-lg">
+        <div class="logo">
+            <img src="https://www.decom.ufvjm.edu.br/dc2020/wp-content/uploads/2020/03/logo_topo.png"
+                 alt="Governo Federal" />
         </div>
-        <div class="flex flex-wrap items-center gap-4">
-            <a href="{% url 'home:index' %}" class="transition hover:text-gov.deep">Inicio</a>
-            <a href="{% url 'home:index' %}#servicos" class="transition hover:text-gov.deep">Conteudo</a>
-            <a href="{% url 'home:index' %}#contato" class="transition hover:text-gov.deep">Contato</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'accounts:dashboard' %}" class="transition hover:text-gov.deep">Painel</a>
-            {% else %}
-                <a href="{% url 'accounts:login_request' %}" class="transition hover:text-gov.deep">Login</a>
-            {% endif %}
+
+        <div class="br-list horizontal" data-toggle="data-toggle" data-sub="data-sub">
+            <div class="col-2">
+                <a class="br-item header" href="javascript:void(0)">
+                    <div class="content text-down-01 text-bold text-uppercase">Navegação</div>
+                    <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+                </a>
+                <div class="br-list">
+                    <span class="br-divider d-md-none"></span>
+                    <a class="br-item" href="{% url 'home:index' %}">
+                        <div class="content">Início</div>
+                    </a>
+                    <a class="br-item" href="{% url 'home:index' %}#servicos">
+                        <div class="content">Conteúdo</div>
+                    </a>
+                    <a class="br-item" href="{% url 'home:index' %}#contato">
+                        <div class="content">Contato</div>
+                    </a>
+                    <span class="br-divider d-md-none"></span>
+                </div>
+            </div>
+
+            <div class="col-2">
+                <a class="br-item header" href="javascript:void(0)">
+                    <div class="content text-down-01 text-bold text-uppercase">Acesso</div>
+                    <div class="support"><i class="fas fa-angle-down" aria-hidden="true"></i></div>
+                </a>
+                <div class="br-list">
+                    <span class="br-divider d-md-none"></span>
+                    {% if user.is_authenticated %}
+                        <a class="br-item" href="{% url 'accounts:dashboard' %}">
+                            <div class="content">Painel</div>
+                        </a>
+                    {% else %}
+                        <a class="br-item" href="{% url 'accounts:login_request' %}">
+                            <div class="content">Login</div>
+                        </a>
+                    {% endif %}
+                    <span class="br-divider d-md-none"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-none d-sm-block">
+            <div class="row align-items-end justify-content-between py-5">
+                <div class="col social-network">
+                    <p class="text-up-01 text-extra-bold text-uppercase">Portal institucional</p>
+                    <p class="text-down-01 mb-0">
+                        Ambiente digital do Departamento de Computacao para acesso institucional e publicação de conteúdo.
+                    </p>
+                </div>
+                <div class="col assigns text-right">
+                    <img class="ml-4"
+                         src="https://cdngovbr-ds.estaleiro.serpro.gov.br/design-system/images/logo-assign-negative.png"
+                         alt="Assinatura do Governo Federal" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <span class="br-divider my-3"></span>
+
+    <div class="container-lg">
+        <div class="info">
+            <div class="text-down-01 text-medium pb-3 text-center">
+                Portal DECOM — Departamento de Computacao.
+            </div>
         </div>
     </div>
 </footer>

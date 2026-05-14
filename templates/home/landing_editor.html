@@ -1,148 +1,213 @@
 {% extends "base.html" %}
-
 {% block title %}Conteudo da Landing | DECOM{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-            <p class="section-label">Gestao do front</p>
-            <h2 class="mt-3 text-3xl font-black text-gov.deep">Editar landing page</h2>
-            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                Esta tela permite manter o layout atual e trocar os textos e cards conforme a necessidade do portal. O acesso fica restrito ao admin ou a usuarios autorizados para cuidar do front.
-            </p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-            <a href="{% url 'accounts:dashboard' %}" class="btn-secondary px-5 py-4 text-sm">
-                Voltar ao painel
-            </a>
-            <a href="{% url 'home:index' %}" class="btn-primary px-5 py-4 text-sm">
-                Ver landing atual
-            </a>
+<div class="br-card mb-5">
+    <div class="card-header">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+            <div>
+                <h2 class="text-up-03 text-bold mb-1">Editar landing page</h2>
+                <p class="text-down-01 text-secondary-01 mb-0">
+                    Preencha somente o que deve aparecer na pagina publica.
+                </p>
+            </div>
+            <div class="d-flex flex-wrap mt-3 mt-lg-0" style="gap: 0.75rem;">
+                <a href="{% url 'accounts:dashboard' %}" class="br-button secondary">Voltar ao painel</a>
+                <a href="{% url 'home:index' %}" class="br-button primary">Ver landing atual</a>
+            </div>
         </div>
     </div>
+</div>
 
-    <form method="post" class="mt-8 space-y-8">
-        {% csrf_token %}
-        <div class="grid gap-8 xl:grid-cols-[1.05fr_0.95fr]">
-            <div class="space-y-8">
-                <div class="surface-panel rounded-[2rem] p-8">
-                    <p class="section-label">Capa</p>
-                    <div class="mt-6 grid gap-5">
-                        {% for field in content_form %}
-                            {% if field.name == "hero_badge" or field.name == "hero_title" or field.name == "hero_description" or field.name == "hero_primary_cta_label" or field.name == "hero_secondary_cta_label" %}
-                                <div>
-                                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                                        {{ field.label }}
-                                    </label>
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <p class="mt-2 text-sm font-medium text-rose-700">{{ field.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+<form method="post">
+    {% csrf_token %}
+
+    {% if content_form.non_field_errors %}
+        <div class="br-message danger mb-4" role="alert">
+            <div class="icon">
+                <i class="fas fa-times-circle fa-lg" aria-hidden="true"></i>
+            </div>
+            <div class="content">
+                {% for error in content_form.non_field_errors %}
+                    <span class="message-body d-block">{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="br-card mb-4">
+                <div class="card-header">
+                    <h3 class="text-up-02 text-bold mb-0">Capa</h3>
                 </div>
-                <div class="surface-panel rounded-[2rem] p-8">
-                    <p class="section-label">Blocos da pagina</p>
-                    <div class="mt-6 grid gap-5">
-                        {% for field in content_form %}
-                            {% if field.name == "services_badge" or field.name == "services_title" or field.name == "services_description" or field.name == "contact_badge" or field.name == "contact_title" or field.name == "contact_description" or field.name == "contact_panel_badge" or field.name == "contact_panel_description" or field.name == "contact_cta_label" %}
-                                <div>
-                                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                                        {{ field.label }}
-                                    </label>
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <p class="mt-2 text-sm font-medium text-rose-700">{{ field.errors.0 }}</p>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
+                <div class="card-content">
+                    <fieldset class="ds-form-fieldset">
+                        <legend class="text-up-01 text-bold mb-3">Conteudo principal</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Campos vazios nao sao publicados. Use apenas informacao institucional real.
+                        </p>
+                        {% include "includes/ds_field.html" with field=content_form.hero_badge kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.hero_title kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.hero_description kind="textarea" wrapper_class="mb-4" %}
+                    </fieldset>
+
+                    <fieldset class="ds-form-fieldset mt-5">
+                        <legend class="text-up-01 text-bold mb-3">Acoes da capa</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Publique botoes apenas quando houver um destino claro para o usuario.
+                        </p>
+                        {% include "includes/ds_field.html" with field=content_form.hero_primary_cta_label kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.hero_secondary_cta_label kind="input" wrapper_class="mb-0" %}
+                    </fieldset>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <div class="surface-panel rounded-[2rem] p-8">
-                    <p class="section-label">Como operar</p>
-                    <div class="mt-5 space-y-3 text-sm leading-7 text-slate-600">
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3">Mantenha a capa objetiva e sem texto tecnico do sistema.</div>
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3">Use os destaques do topo para avisos curtos ou chamadas importantes.</div>
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3">Use os cards principais apenas para o que realmente precisa aparecer na home.</div>
-                        <div class="rounded-2xl bg-slate-50 px-4 py-3">Se um card deve levar para outra pagina, preencha texto e URL do link.</div>
-                    </div>
+            <div class="br-card mb-4">
+                <div class="card-header">
+                    <h3 class="text-up-02 text-bold mb-0">Blocos da pagina</h3>
                 </div>
-                <div class="surface-panel rounded-[2rem] p-8">
-                    <p class="section-label">Escopo</p>
-                    <p class="mt-3 text-sm leading-7 text-slate-600">
-                        O objetivo aqui e deixar o front administravel. O layout continua estavel, mas o conteudo passa a ser operado por quem cuida da comunicacao do portal.
+                <div class="card-content">
+                    <fieldset class="ds-form-fieldset">
+                        <legend class="text-up-01 text-bold mb-3">Secao de servicos</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Use esta area para introduzir os cards centrais da pagina.
+                        </p>
+                        {% include "includes/ds_field.html" with field=content_form.services_badge kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.services_title kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.services_description kind="textarea" wrapper_class="mb-0" %}
+                    </fieldset>
+
+                    <fieldset class="ds-form-fieldset mt-5">
+                        <legend class="text-up-01 text-bold mb-3">Secao final</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Encaminhe o usuario para o proximo passo com uma chamada curta.
+                        </p>
+                        {% include "includes/ds_field.html" with field=content_form.contact_badge kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.contact_title kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.contact_description kind="textarea" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.contact_panel_badge kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.contact_panel_description kind="textarea" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=content_form.contact_cta_label kind="input" wrapper_class="mb-0" %}
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="br-card mb-4">
+                <div class="card-header">
+                    <h3 class="text-up-02 text-bold mb-0">Orientacoes</h3>
+                </div>
+                <div class="card-content">
+                    <ul class="mb-0">
+                        <li class="mb-2">Mantenha a capa objetiva e institucional.</li>
+                        <li class="mb-2">Campos vazios nao sao exibidos na landing.</li>
+                        <li class="mb-2">Use destaques apenas quando houver conteudo real para publicar.</li>
+                        <li class="mb-2">Desative itens ainda nao prontos em vez de usar conteudo ficticio.</li>
+                        <li class="mb-0">Revise links antes de salvar.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="br-card mb-4">
+                <div class="card-header">
+                    <h3 class="text-up-02 text-bold mb-0">Publicacao</h3>
+                </div>
+                <div class="card-content">
+                    <p class="text-down-01">
+                        As alteracoes salvas aqui passam a refletir diretamente na pagina inicial.
                     </p>
-                    <button type="submit" class="btn-primary mt-6 w-full px-5 py-4 text-sm">
+                    <button type="submit" class="br-button primary block">
                         Salvar landing page
                     </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        {% for section in editor_sections %}
-            <div class="surface-panel rounded-[2rem] p-8">
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+    {% for section in editor_sections %}
+        <div class="br-card mb-4">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
                     <div>
-                        <p class="section-label">{{ section.title }}</p>
-                        <p class="mt-2 max-w-3xl text-sm leading-7 text-slate-600">{{ section.description }}</p>
+                        <h3 class="text-up-02 text-bold mb-1">{{ section.title }}</h3>
+                        <p class="text-down-01 text-secondary-01 mb-0">{{ section.description }}</p>
                     </div>
-                    <p class="text-sm text-slate-500">Um formulario vazio ao final serve para incluir novo item.</p>
-                </div>
-                <div class="mt-6">
-                    {{ section.formset.management_form }}
-                    <div class="space-y-5">
-                        {% for form in section.formset %}
-                            <div class="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                                {% for hidden in form.hidden_fields %}
-                                    {{ hidden }}
-                                {% endfor %}
-                                <div class="grid gap-5 lg:grid-cols-2">
-                                    {% for field in form.visible_fields %}
-                                        <div class="{% if field.name == 'description' or field.name == 'action_url' %}lg:col-span-2{% endif %}">
-                                            {% if field.name == "DELETE" %}
-                                                <label class="inline-flex items-center gap-3 rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-semibold text-rose-700">
-                                                    {{ field }}
-                                                    Excluir este item
-                                                </label>
-                                            {% elif field.name == "is_active" %}
-                                                <label class="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-                                                    {{ field }}
-                                                    Item visivel na landing
-                                                </label>
-                                            {% else %}
-                                                <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                                                    {{ field.label }}
-                                                </label>
-                                                {{ field }}
-                                            {% endif %}
-                                            {% if field.errors %}
-                                                <p class="mt-2 text-sm font-medium text-rose-700">{{ field.errors.0 }}</p>
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                                {% if form.non_field_errors %}
-                                    <p class="mt-3 text-sm font-medium text-rose-700">{{ form.non_field_errors.0 }}</p>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
+                    <p class="text-down-02 mt-2 mt-lg-0 mb-0">Use o formulario vazio ao final para incluir novo item.</p>
                 </div>
             </div>
-        {% endfor %}
+            <div class="card-content">
+                {{ section.formset.management_form }}
+                {% if section.formset.non_form_errors %}
+                    <div class="br-message danger mb-4" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-times-circle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            {% for error in section.formset.non_form_errors %}
+                                <span class="message-body d-block">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                {% for form in section.formset %}
+                    <div class="br-card mb-4">
+                        <div class="card-content">
+                            {% for hidden in form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
 
-        <div class="flex justify-end">
-            <button type="submit" class="btn-primary px-6 py-4 text-sm">
-                Salvar alteracoes
-            </button>
+                            <fieldset class="ds-form-fieldset">
+                                <legend class="text-up-01 text-bold mb-3">
+                                    {% if form.instance.pk %}Item {{ forloop.counter }}{% else %}Novo item{% endif %}
+                                </legend>
+                                {% include "includes/ds_field.html" with field=form.label kind="input" wrapper_class="mb-4" %}
+                                {% include "includes/ds_field.html" with field=form.title kind="input" wrapper_class="mb-4" %}
+                                {% include "includes/ds_field.html" with field=form.description kind="textarea" wrapper_class="mb-4" %}
+                                {% include "includes/ds_field.html" with field=form.action_label kind="input" wrapper_class="mb-4" %}
+                                {% include "includes/ds_field.html" with field=form.action_url kind="input" wrapper_class="mb-4" %}
+                                {% include "includes/ds_field.html" with field=form.order kind="input" wrapper_class="mb-0" %}
+                            </fieldset>
+
+                            <fieldset class="ds-form-fieldset mt-5">
+                                <legend class="text-up-01 text-bold mb-3">Publicacao</legend>
+                                <p class="text-down-01 text-secondary-01 mb-3">
+                                    Marque apenas o que deve ficar visivel ou ser removido da secao.
+                                </p>
+                                <div class="br-checkbox mb-3">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}">Item visivel na landing</label>
+                                </div>
+                                <div class="br-checkbox">
+                                    {{ form.DELETE }}
+                                    <label for="{{ form.DELETE.id_for_label }}">Excluir este item</label>
+                                </div>
+                            </fieldset>
+
+                            {% if form.non_field_errors %}
+                                <div class="br-message danger mt-3" role="alert">
+                                    <div class="icon">
+                                        <i class="fas fa-times-circle fa-lg" aria-hidden="true"></i>
+                                    </div>
+                                    <div class="content">
+                                        {% for error in form.non_field_errors %}
+                                            <span class="message-body d-block">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
-    </form>
-</section>
+    {% endfor %}
+
+    <div class="d-flex justify-content-end">
+        <button type="submit" class="br-button primary">
+            Salvar alteracoes
+        </button>
+    </div>
+</form>
 {% endblock %}

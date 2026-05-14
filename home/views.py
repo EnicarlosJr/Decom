@@ -34,6 +34,11 @@ LANDING_SECTION_CONFIGS = [
 ]
 
 
+def _has_any_value(*values):
+    """Indica se ao menos um valor textual foi preenchido."""
+    return any(bool(value) for value in values)
+
+
 def _build_landing_groups(page):
     """Agrupa os itens dinamicos da landing por secao renderizada."""
     grouped_items = {
@@ -79,13 +84,43 @@ def index(request):
     """Renderiza a landing page publica do portal."""
     page = LandingPageContent.get_solo()
     grouped_items = _build_landing_groups(page)
+    hero_metrics = grouped_items[LandingSectionItem.Section.HERO_METRIC]
+    service_cards = grouped_items[LandingSectionItem.Section.SERVICE]
+    has_contact_panel = _has_any_value(
+        page.contact_panel_badge,
+        page.contact_panel_description,
+        page.contact_cta_label,
+    )
+    has_services_section = _has_any_value(
+        page.services_badge,
+        page.services_title,
+        page.services_description,
+    ) or bool(service_cards)
+    has_contact_section = _has_any_value(
+        page.contact_badge,
+        page.contact_title,
+        page.contact_description,
+        page.contact_cta_label,
+    )
+    has_hero_actions = bool(page.hero_secondary_cta_label) or (
+        bool(page.hero_primary_cta_label) and has_services_section
+    )
+    has_hero_content = _has_any_value(
+        page.hero_badge,
+        page.hero_title,
+        page.hero_description,
+    ) or has_hero_actions
     return render(
         request,
         "home/index.html",
         {
             "landing_page": page,
-            "hero_metrics": grouped_items[LandingSectionItem.Section.HERO_METRIC],
-            "service_cards": grouped_items[LandingSectionItem.Section.SERVICE],
+            "hero_metrics": hero_metrics,
+            "service_cards": service_cards,
+            "has_contact_panel": has_contact_panel,
+            "has_services_section": has_services_section,
+            "has_contact_section": has_contact_section,
+            "show_hero_section": has_hero_content or has_contact_panel or bool(hero_metrics),
             "can_manage_landing_content": user_can_manage_landing_content(request.user),
         },
     )

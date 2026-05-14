@@ -1,140 +1,164 @@
 {% extends "base.html" %}
-
 {% block title %}Convites | DECOM{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-            <p class="section-label">Convites</p>
-            <h2 class="font-display mt-3 text-4xl text-gov.deep">Gerenciar acessos</h2>
-        </div>
-        <a href="{% url 'accounts:dashboard' %}" class="btn-secondary px-5 py-3 text-sm">
-            Voltar ao painel
-        </a>
-    </div>
-
-    <div class="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div class="space-y-6">
-            <div class="surface-panel rounded-[2rem] p-7 sm:p-8">
-                <p class="section-label">Novo convite</p>
-                <p class="mt-3 text-sm leading-7 text-slate-600">
-                    Informe o e-mail institucional e envie.
+<div class="br-card mb-4">
+    <div class="card-header">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+            <div>
+                <h2 class="text-up-03 text-bold mb-1">Convites de acesso</h2>
+                <p class="text-down-01 text-secondary-01 mb-0">
+                    Cadastro, consulta e reenvio de convites institucionais.
                 </p>
-                <form method="post" class="mt-6 space-y-6">
+            </div>
+            <a href="{% url 'accounts:dashboard' %}" class="br-button secondary mt-3 mt-lg-0">
+                Voltar ao painel
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 mb-4">
+        <div class="br-card h-100">
+            <div class="card-header">
+                <h3 class="text-up-02 text-bold mb-0">Novo convite</h3>
+            </div>
+            <div class="card-content">
+                <form method="post">
                     {% csrf_token %}
-                    <div>
-                        <label for="{{ form.email.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                            {{ form.email.label }}
-                        </label>
-                        {{ form.email }}
-                        {% if form.email.errors %}
-                            <p class="mt-2 text-sm font-medium text-rose-700">{{ form.email.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <label for="{{ form.notes.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                            {{ form.notes.label }}
-                        </label>
-                        {{ form.notes }}
-                        {% if form.notes.errors %}
-                            <p class="mt-2 text-sm font-medium text-rose-700">{{ form.notes.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    <button type="submit" class="btn-primary w-full px-5 py-4 text-sm">
+
+                    <fieldset class="ds-form-fieldset">
+                        <legend class="text-up-01 text-bold mb-3">Dados do convite</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Informe somente o necessario para liberar o primeiro acesso.
+                        </p>
+                        {% include "includes/ds_field.html" with field=form.email kind="input" wrapper_class="mb-4" %}
+                        {% include "includes/ds_field.html" with field=form.notes kind="textarea" wrapper_class="mb-4" %}
+                    </fieldset>
+
+                    <button type="submit" class="br-button primary block">
                         Enviar convite
                     </button>
                 </form>
             </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="surface-panel rounded-[1.6rem] p-5">
-                    <p class="text-sm text-slate-500">Pendentes</p>
-                    <p class="mt-2 text-3xl font-extrabold text-gov.deep">{{ metrics.pending }}</p>
-                </div>
-                <div class="surface-panel rounded-[1.6rem] p-5">
-                    <p class="text-sm text-slate-500">Aceitos</p>
-                    <p class="mt-2 text-3xl font-extrabold text-gov.deep">{{ metrics.accepted }}</p>
-                </div>
-            </div>
         </div>
+    </div>
 
-        <div class="surface-panel rounded-[2rem] p-7 sm:p-8">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <p class="section-label">Lista</p>
-                    <h3 class="mt-2 text-2xl font-extrabold text-gov.deep">Convites cadastrados</h3>
+    <div class="col-xl-8 mb-4">
+        <div class="br-card h-100">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+                    <div>
+                        <h3 class="text-up-02 text-bold mb-1">Lista de convites</h3>
+                        <p class="text-down-01 text-secondary-01 mb-0">
+                            {{ result_count }} registro{{ result_count|pluralize }}
+                        </p>
+                    </div>
                 </div>
-                <form method="get" class="grid gap-3 sm:grid-cols-[1fr_auto]">
-                    <input type="text" name="q" value="{{ filters.query }}" placeholder="Buscar por e-mail" class="field-input block w-full rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm outline-none transition focus:border-gov.blue focus:ring-4 focus:ring-[rgba(53,91,136,0.12)]">
-                    <select name="status" class="field-input rounded-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-gov.blue focus:ring-4 focus:ring-[rgba(53,91,136,0.12)]">
-                        <option value="all" {% if filters.status == "all" %}selected{% endif %}>Todos</option>
-                        <option value="pending" {% if filters.status == "pending" %}selected{% endif %}>Pendentes</option>
-                        <option value="accepted" {% if filters.status == "accepted" %}selected{% endif %}>Aceitos</option>
-                        <option value="expired" {% if filters.status == "expired" %}selected{% endif %}>Expirados</option>
-                    </select>
-                    <button type="submit" class="btn-secondary sm:col-span-2 px-4 py-2.5 text-sm">
-                        Filtrar
-                    </button>
-                </form>
             </div>
 
-            <div class="mt-6 space-y-4">
-                {% for row in invitation_rows %}
-                    {% with invitation=row.obj %}
-                        <article class="rounded-[1.6rem] border border-[#ece4d9] bg-gov.sand/55 p-5">
-                            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-3">
-                                        <h4 class="text-lg font-extrabold text-gov.deep">{{ invitation.email }}</h4>
-                                        {% if invitation.accepted_at %}
-                                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">Aceito</span>
-                                        {% elif invitation.is_expired %}
-                                            <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-800">Expirado</span>
-                                        {% else %}
-                                            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">Pendente</span>
-                                        {% endif %}
-                                    </div>
-
-                                    <dl class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-                                        <div>
-                                            <dt class="font-semibold text-slate-500">Validade</dt>
-                                            <dd class="mt-1">{{ invitation.expires_at|date:"d/m/Y H:i" }}</dd>
-                                        </div>
-                                        <div>
-                                            <dt class="font-semibold text-slate-500">Ultimo envio</dt>
-                                            <dd class="mt-1">{{ invitation.sent_at|date:"d/m/Y H:i"|default:"Ainda nao enviado" }}</dd>
-                                        </div>
-                                    </dl>
-
-                                    {% if invitation.notes %}
-                                        <p class="mt-4 rounded-2xl bg-white px-4 py-3 text-sm leading-7 text-slate-600">{{ invitation.notes }}</p>
-                                    {% endif %}
-                                </div>
-
-                                <div class="flex w-full flex-col gap-3 lg:w-48">
-                                    <a href="{{ row.acceptance_url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary px-4 py-3 text-sm">
-                                        Abrir link
-                                    </a>
-                                    {% if not invitation.accepted_at %}
-                                        <form action="{% url 'accounts:resend_invitation' invitation.id %}" method="post">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn-primary w-full px-4 py-3 text-sm">
-                                                {% if invitation.is_expired %}Renovar e reenviar{% else %}Reenviar{% endif %}
-                                            </button>
-                                        </form>
-                                    {% endif %}
+            <div class="card-content">
+                <form method="get" class="mb-4">
+                    <fieldset class="ds-form-fieldset">
+                        <legend class="text-up-01 text-bold mb-3">Filtrar convites</legend>
+                        <div class="row align-items-end">
+                            <div class="col-lg-5 mb-3 mb-lg-0">
+                                <div class="br-input">
+                                    <label for="id_filter_q">Buscar por e-mail</label>
+                                    <span class="help d-block mb-2">Digite parte do endereco institucional.</span>
+                                    <input id="id_filter_q" type="text" name="q" value="{{ filters.query }}">
                                 </div>
                             </div>
-                        </article>
-                    {% endwith %}
-                {% empty %}
-                    <div class="rounded-[1.6rem] border border-dashed border-gov.blue/20 bg-gov.sand/45 px-5 py-8 text-sm text-slate-500">
-                        Nenhum convite encontrado.
+                            <div class="col-lg-3 mb-3 mb-lg-0">
+                                <div class="br-select">
+                                    <label for="id_filter_status">Status</label>
+                                    <span class="help d-block mb-2">Selecione uma situacao.</span>
+                                    <select id="id_filter_status" name="status">
+                                        <option value="all" {% if filters.status == "all" %}selected{% endif %}>Todos</option>
+                                        <option value="pending" {% if filters.status == "pending" %}selected{% endif %}>Pendentes</option>
+                                        <option value="accepted" {% if filters.status == "accepted" %}selected{% endif %}>Aceitos</option>
+                                        <option value="expired" {% if filters.status == "expired" %}selected{% endif %}>Expirados</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-2">
+                                <button type="submit" class="br-button secondary block">Filtrar</button>
+                            </div>
+                            {% if filters.has_active_filters %}
+                                <div class="col-sm-6 col-lg-2 mt-3 mt-sm-0">
+                                    <a href="{% url 'accounts:invitation_panel' %}" class="br-button tertiary block">
+                                        Limpar
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </fieldset>
+                </form>
+
+                {% if invitation_rows %}
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Conta</th>
+                                    <th>Status</th>
+                                    <th>Validade</th>
+                                    <th>Ultimo envio</th>
+                                    <th>Acoes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in invitation_rows %}
+                                    {% with invitation=row.obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ invitation.email }}</strong>
+                                                {% if invitation.notes %}
+                                                    <div class="text-down-02 text-secondary-01 mt-1">{{ invitation.notes }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="br-tag {{ row.status_tone }}">{{ row.status_label }}</span>
+                                            </td>
+                                            <td class="text-nowrap">{{ invitation.expires_at|date:"d/m/Y H:i" }}</td>
+                                            <td class="text-nowrap">{{ invitation.sent_at|date:"d/m/Y H:i"|default:"Nao enviado" }}</td>
+                                            <td>
+                                                <div class="d-flex flex-wrap" style="gap: 0.5rem;">
+                                                    <a href="{{ row.acceptance_url }}"
+                                                       target="_blank"
+                                                       rel="noopener noreferrer"
+                                                       class="br-button secondary small">
+                                                        Abrir link
+                                                    </a>
+                                                    {% if row.can_resend %}
+                                                        <form action="{% url 'accounts:resend_invitation' invitation.id %}" method="post">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="br-button primary small">
+                                                                {% if invitation.is_expired %}Renovar{% else %}Reenviar{% endif %}
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                {% endfor %}
+                {% else %}
+                    <div class="br-message info" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            <span class="message-body">Nenhum convite encontrado.</span>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}

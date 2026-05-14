@@ -6,17 +6,11 @@ from .models import LandingPageContent, LandingSectionItem
 
 
 FIELD_INPUT_CLASS = (
-    "field-input block w-full rounded-2xl border border-slate-300 "
-    "bg-white px-4 py-4 text-slate-900 placeholder-slate-400 shadow-sm "
-    "outline-none transition focus:border-gov.blue focus:ring-4 "
-    "focus:ring-[rgba(53,91,136,0.12)]"
+    ""
 )
 
 FIELD_TEXTAREA_CLASS = (
-    "field-input block min-h-28 w-full rounded-2xl border border-slate-300 "
-    "bg-white px-4 py-4 text-slate-900 placeholder-slate-400 shadow-sm "
-    "outline-none transition focus:border-gov.blue focus:ring-4 "
-    "focus:ring-[rgba(53,91,136,0.12)]"
+    ""
 )
 
 
@@ -44,18 +38,58 @@ class LandingPageContentForm(forms.ModelForm):
         widgets = {
             "hero_badge": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "hero_title": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
-            "hero_description": forms.Textarea(attrs={"class": FIELD_TEXTAREA_CLASS}),
+            "hero_description": forms.Textarea(
+                attrs={"class": FIELD_TEXTAREA_CLASS, "rows": 4}
+            ),
             "hero_primary_cta_label": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "hero_secondary_cta_label": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "services_badge": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "services_title": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
-            "services_description": forms.Textarea(attrs={"class": FIELD_TEXTAREA_CLASS}),
+            "services_description": forms.Textarea(
+                attrs={"class": FIELD_TEXTAREA_CLASS, "rows": 4}
+            ),
             "contact_badge": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "contact_title": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
-            "contact_description": forms.Textarea(attrs={"class": FIELD_TEXTAREA_CLASS}),
+            "contact_description": forms.Textarea(
+                attrs={"class": FIELD_TEXTAREA_CLASS, "rows": 4}
+            ),
             "contact_panel_badge": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
-            "contact_panel_description": forms.Textarea(attrs={"class": FIELD_TEXTAREA_CLASS}),
+            "contact_panel_description": forms.Textarea(
+                attrs={"class": FIELD_TEXTAREA_CLASS, "rows": 4}
+            ),
             "contact_cta_label": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
+        }
+        labels = {
+            "hero_badge": "Selo do topo",
+            "hero_title": "Titulo principal",
+            "hero_description": "Descricao principal",
+            "hero_primary_cta_label": "Texto do botao principal",
+            "hero_secondary_cta_label": "Texto do botao secundario",
+            "services_badge": "Selo da secao de servicos",
+            "services_title": "Titulo da secao de servicos",
+            "services_description": "Descricao da secao de servicos",
+            "contact_badge": "Selo da secao final",
+            "contact_title": "Titulo da secao final",
+            "contact_description": "Descricao da secao final",
+            "contact_panel_badge": "Selo do painel lateral",
+            "contact_panel_description": "Descricao do painel lateral",
+            "contact_cta_label": "Texto do botao final",
+        }
+        help_texts = {
+            "hero_badge": "Rotulo curto acima do titulo. Deixe em branco para ocultar.",
+            "hero_title": "Mensagem principal exibida na primeira dobra da pagina.",
+            "hero_description": "Resumo institucional da pagina. Prefira um paragrafo curto.",
+            "hero_primary_cta_label": "Texto do botao principal da capa.",
+            "hero_secondary_cta_label": "Texto do botao de apoio exibido ao lado da acao principal.",
+            "services_badge": "Rotulo curto para apresentar os cards centrais.",
+            "services_title": "Titulo da secao principal de servicos ou destaques.",
+            "services_description": "Texto introdutorio curto para contextualizar os cards.",
+            "contact_badge": "Rotulo curto da secao final da pagina.",
+            "contact_title": "Titulo da chamada final exibida antes do rodape.",
+            "contact_description": "Mensagem institucional de encerramento ou orientacao final.",
+            "contact_panel_badge": "Selo do painel lateral da secao final.",
+            "contact_panel_description": "Texto curto do painel lateral. Deixe vazio para ocultar.",
+            "contact_cta_label": "Texto do botao final exibido na secao de contato.",
         }
 
 
@@ -76,7 +110,9 @@ class LandingSectionItemForm(forms.ModelForm):
         widgets = {
             "label": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "title": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
-            "description": forms.Textarea(attrs={"class": FIELD_TEXTAREA_CLASS}),
+            "description": forms.Textarea(
+                attrs={"class": FIELD_TEXTAREA_CLASS, "rows": 4}
+            ),
             "action_label": forms.TextInput(attrs={"class": FIELD_INPUT_CLASS}),
             "action_url": forms.TextInput(
                 attrs={
@@ -91,4 +127,21 @@ class LandingSectionItemForm(forms.ModelForm):
                     "step": 10,
                 }
             ),
+        }
+        labels = {
+            "label": "Rotulo",
+            "title": "Titulo",
+            "description": "Descricao",
+            "action_label": "Texto do link",
+            "action_url": "URL do link",
+            "order": "Ordem de exibicao",
+            "is_active": "Ativo",
+        }
+        help_texts = {
+            "label": "Rotulo curto opcional exibido acima do titulo.",
+            "title": "Titulo principal do card ou destaque.",
+            "description": "Texto de apoio. Use frases objetivas e evite excesso de informacao.",
+            "action_label": "Texto do link ou botao quando houver destino.",
+            "action_url": "Use rota interna ou URL completa para a acao do item.",
+            "order": "Define a ordem de exibicao. Menores valores aparecem primeiro.",
         }

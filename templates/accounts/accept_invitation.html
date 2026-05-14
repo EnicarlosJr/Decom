@@ -1,50 +1,90 @@
 {% extends "base.html" %}
-
 {% block title %}Convite | DECOM{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-    <div class="surface-panel rounded-[2rem] p-7 sm:p-8">
-        <p class="section-label">Convite</p>
-        <h2 class="font-display mt-3 text-4xl text-gov.deep">
-            {% if invitation %}{{ invitation.email }}{% else %}Link de convite{% endif %}
-        </h2>
+<div class="row justify-content-center">
+    <div class="col-sm-10 col-md-8 col-lg-6">
+        <div class="br-card">
+            <div class="card-header">
+                <p class="text-up-01 text-bold text-primary-default mb-1">Convite</p>
+                <h2 class="text-up-02 text-bold mb-0">
+                    {% if invitation %}{{ invitation.email }}{% else %}Link de convite{% endif %}
+                </h2>
+            </div>
 
-        {% if invitation_status == "ready" %}
-            <p class="mt-4 text-sm leading-7 text-slate-600">
-                Este convite esta pronto para uso e expira em <strong>{{ invitation.expires_at|date:"d/m/Y H:i" }}</strong>.
-            </p>
-        {% elif invitation_status == "accepted" %}
-            <p class="mt-4 text-sm leading-7 text-slate-600">
-                Este convite ja foi utilizado.
-            </p>
-        {% elif invitation_status == "invalid" %}
-            <p class="mt-4 text-sm leading-7 text-slate-600">
-                Este link nao corresponde a um convite valido. Ele pode ter expirado, sido substituido por um reenvio ou estar incompleto.
-            </p>
-        {% else %}
-            <p class="mt-4 text-sm leading-7 text-slate-600">
-                Este convite expirou. Solicite um novo link.
-            </p>
-        {% endif %}
-
-        <div class="mt-8">
-            {% if invitation_status == "ready" %}
-                {% if social_login_url %}
-                    <a href="{{ social_login_url }}" class="btn-primary w-full px-5 py-4 text-sm">
-                        Continuar
-                    </a>
+            <div class="card-content">
+                {% if invitation_status == "ready" %}
+                    <div class="br-message success mb-4" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            <span class="message-title">Convite valido.</span>
+                            <span class="message-body">
+                                Este convite esta pronto para uso e expira em
+                                <strong>{{ invitation.expires_at|date:"d/m/Y H:i" }}</strong>.
+                            </span>
+                        </div>
+                    </div>
+                {% elif invitation_status == "accepted" %}
+                    <div class="br-message info mb-4" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            <span class="message-body">Este convite ja foi utilizado.</span>
+                        </div>
+                    </div>
+                {% elif invitation_status == "invalid" %}
+                    <div class="br-message danger mb-4" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-times-circle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            <span class="message-body">
+                                Este link nao corresponde a um convite valido.
+                                Ele pode ter expirado, sido substituido por um reenvio ou estar incompleto.
+                            </span>
+                        </div>
+                    </div>
                 {% else %}
-                    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-                        O login institucional nao esta disponivel neste ambiente.
+                    <div class="br-message warning mb-4" role="alert">
+                        <div class="icon">
+                            <i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                        </div>
+                        <div class="content">
+                            <span class="message-body">
+                                Este convite expirou. Solicite um novo link.
+                            </span>
+                        </div>
                     </div>
                 {% endif %}
-            {% else %}
-                <a href="{% url 'accounts:login_request' %}" class="btn-secondary w-full px-5 py-4 text-sm">
-                    Ir para login
-                </a>
-            {% endif %}
+
+                {% if invitation_status == "ready" %}
+                    {% if social_login_url %}
+                        <a href="{{ social_login_url }}" class="br-button primary block">
+                            <i class="fas fa-id-card mr-2" aria-hidden="true"></i>
+                            Continuar
+                        </a>
+                    {% else %}
+                        <div class="br-message warning" role="alert">
+                            <div class="icon">
+                                <i class="fas fa-exclamation-triangle fa-lg" aria-hidden="true"></i>
+                            </div>
+                            <div class="content">
+                                <span class="message-body">
+                                    O login institucional nao esta disponivel neste ambiente.
+                                </span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'accounts:login_request' %}" class="br-button secondary block mt-3">
+                        Ir para login
+                    </a>
+                {% endif %}
+            </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}

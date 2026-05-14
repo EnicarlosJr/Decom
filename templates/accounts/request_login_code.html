@@ -1,45 +1,49 @@
 {% extends "base.html" %}
-
 {% block title %}Entrar | DECOM{% endblock %}
 
 {% block content %}
-<section class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-panel">
-        <div class="border-b border-slate-200 bg-gov.sand px-6 py-6 sm:px-8">
-            <p class="text-sm font-semibold uppercase tracking-[0.24em] text-gov.green">Acesso por codigo</p>
-            <h2 class="mt-3 text-3xl font-black text-gov.deep">Receber codigo de confirmacao</h2>
-            <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                Informe o e-mail institucional para receber a confirmacao de acesso. Este fluxo mantem o mesmo controle de perfis utilizado na area restrita.
-            </p>
-        </div>
-        <div class="px-6 py-8 sm:px-8">
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ next_url }}">
-                <div>
-                    <label for="{{ form.email.id_for_label }}" class="mb-2 block text-sm font-bold text-slate-700">
-                        {{ form.email.label }}
-                    </label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <p class="mt-2 text-sm font-medium text-rose-700">{{ form.email.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                <button type="submit" class="w-full rounded-2xl bg-gov.deep px-5 py-4 text-sm font-bold text-white transition hover:bg-gov.blue">
-                    Enviar confirmacao
-                </button>
-            </form>
-            {% if social_login_url %}
-                <div class="mt-8 border-t border-slate-200 pt-6">
-                    <p class="text-sm leading-7 text-slate-600">
-                        Se a autenticacao institucional estiver disponivel, utilize preferencialmente o acesso com a conta oficial.
-                    </p>
-                    <a href="{{ social_login_url }}" class="mt-4 inline-flex w-full items-center justify-center rounded-2xl border border-gov.deep px-5 py-4 text-sm font-bold text-gov.deep transition hover:bg-slate-50">
-                        Ir para a conta institucional
-                    </a>
-                </div>
-            {% endif %}
+<div class="row justify-content-center">
+    <div class="col-sm-10 col-md-8 col-lg-6">
+        <div class="br-card">
+            <div class="card-header">
+                <p class="text-up-01 text-bold text-primary-default mb-1">Acesso por codigo</p>
+                <h2 class="text-up-02 text-bold mb-1">Receber codigo de confirmacao</h2>
+                <p class="text-down-01 text-secondary-01 mb-0">
+                    Informe o e-mail institucional para receber a confirmacao de acesso.
+                </p>
+            </div>
+
+            <div class="card-content">
+                <form method="post" class="mt-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next_url }}">
+
+                    <fieldset class="ds-form-fieldset">
+                        <legend class="text-up-01 text-bold mb-3">Identificacao institucional</legend>
+                        <p class="text-down-01 text-secondary-01 mb-4">
+                            Use apenas o endereco autorizado para receber o codigo.
+                        </p>
+                        {% include "includes/ds_field.html" with field=form.email kind="input" wrapper_class="mb-4" %}
+                    </fieldset>
+
+                    <button type="submit" class="br-button primary block">
+                        Enviar confirmacao
+                    </button>
+                </form>
+
+                {% if social_login_url %}
+                    <div class="mt-5 pt-4" style="border-top: 1px solid var(--color-secondary-04);">
+                        <p class="text-down-01 mb-3">
+                            Se a autenticacao institucional estiver disponivel, prefira o acesso com a conta oficial.
+                        </p>
+                        <a href="{{ social_login_url }}" class="br-button secondary block">
+                            <i class="fas fa-id-card mr-2" aria-hidden="true"></i>
+                            Ir para a conta institucional
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</section>
+</div>
 {% endblock %}
