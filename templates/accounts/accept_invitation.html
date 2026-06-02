@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Convite | DECOM{% endblock %}
+{% block title %}Primeiro acesso | DECOM{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-sm-10 col-md-8 col-lg-6">
         <div class="br-card">
             <div class="card-header">
-                <p class="text-up-01 text-bold text-primary-default mb-1">Convite</p>
+                <p class="text-up-01 text-bold text-primary-default mb-1">Primeiro acesso</p>
                 <h2 class="text-up-02 text-bold mb-0">
-                    {% if invitation %}{{ invitation.email }}{% else %}Link de convite{% endif %}
+                    {% if invitation %}{{ invitation.email }}{% else %}Link de primeiro acesso{% endif %}
                 </h2>
             </div>
 
@@ -19,9 +19,9 @@
                             <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
                         </div>
                         <div class="content">
-                            <span class="message-title">Convite valido.</span>
+                            <span class="message-title">Link valido.</span>
                             <span class="message-body">
-                                Este convite esta pronto para uso e expira em
+                                Este link esta pronto para uso e expira em
                                 <strong>{{ invitation.expires_at|date:"d/m/Y H:i" }}</strong>.
                             </span>
                         </div>
@@ -32,7 +32,7 @@
                             <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
                         </div>
                         <div class="content">
-                            <span class="message-body">Este convite ja foi utilizado.</span>
+                            <span class="message-body">Este link de primeiro acesso ja foi utilizado.</span>
                         </div>
                     </div>
                 {% elif invitation_status == "invalid" %}
@@ -42,7 +42,7 @@
                         </div>
                         <div class="content">
                             <span class="message-body">
-                                Este link nao corresponde a um convite valido.
+                                Este link nao corresponde a uma autorizacao valida.
                                 Ele pode ter expirado, sido substituido por um reenvio ou estar incompleto.
                             </span>
                         </div>
@@ -54,7 +54,7 @@
                         </div>
                         <div class="content">
                             <span class="message-body">
-                                Este convite expirou. Solicite um novo link.
+                                Este link expirou. Solicite um novo link.
                             </span>
                         </div>
                     </div>

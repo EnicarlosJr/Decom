@@ -73,7 +73,7 @@ class InstitutionalSocialAccountAdapter(DefaultSocialAccountAdapter):
         if pending_invitation and pending_invitation.email != email:
             self._reject(
                 request,
-                f"Este convite foi emitido para {pending_invitation.email}. Entre com essa conta institucional.",
+                f"Este link de primeiro acesso foi emitido para {pending_invitation.email}. Entre com essa conta institucional.",
             )
 
         existing_user = User.objects.filter(email__iexact=email, is_active=True).first()
@@ -88,7 +88,7 @@ class InstitutionalSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         self._reject(
             request,
-            "Seu e-mail institucional ainda nao foi autorizado. Solicite um convite a um administrador do sistema.",
+            "Seu e-mail institucional ainda nao foi autorizado. Solicite a liberacao a um administrador do sistema.",
         )
 
     def is_open_for_signup(self, request, sociallogin):

@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
@@ -55,8 +56,7 @@ class HomeViewTests(TestCase):
         )
         user.set_unusable_password()
         user.save()
-        user.profile.can_manage_landing_page = True
-        user.profile.save(update_fields=["can_manage_landing_page", "updated_at"])
+        user.groups.add(Group.objects.get(name="Editores da landing page"))
         self.client.force_login(user)
 
         response = self.client.get(reverse("home:landing_editor"))

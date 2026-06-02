@@ -107,15 +107,24 @@ if ENABLE_ALLAUTH_LOGIN:
     SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
     SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
     SOCIALACCOUNT_LOGIN_ON_GET = True
-    SOCIALACCOUNT_PROVIDERS = {
-        "google": {
-            "OAUTH_PKCE_ENABLED": True,
-            "SCOPE": ["profile", "email"],
-            "AUTH_PARAMS": {
-                "access_type": "online",
-                "hd": "ufvjm.edu.br",
-            },
+    GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
+    GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "")
+    google_provider_settings = {
+        "OAUTH_PKCE_ENABLED": True,
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+            "hd": "ufvjm.edu.br",
+        },
+    }
+    if GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET:
+        google_provider_settings["APP"] = {
+            "client_id": GOOGLE_OAUTH_CLIENT_ID,
+            "secret": GOOGLE_OAUTH_CLIENT_SECRET,
+            "key": "",
         }
+    SOCIALACCOUNT_PROVIDERS = {
+        "google": google_provider_settings,
     }
 
 

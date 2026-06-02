@@ -4,8 +4,16 @@ import re
 
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 
-from .models import AccessInvitation, is_institutional_email
+from .models import (
+    AccessInvitation,
+    Profile,
+    get_system_group_label,
+    get_system_groups_queryset,
+    is_institutional_email,
+    set_user_system_groups,
+)
 
 
 User = get_user_model()
@@ -14,6 +22,13 @@ User = get_user_model()
 FIELD_INPUT_CLASS = (
     ""
 )
+
+
+class SystemGroupMultipleChoiceField(forms.ModelMultipleChoiceField):
+    """Exibe grupos do sistema em linguagem singular sem alterar o valor salvo."""
+
+    def label_from_instance(self, obj):
+        return get_system_group_label(obj.name)
 
 
 def build_internal_username(email, user_id=None):
@@ -143,9 +158,25 @@ class DepartmentUserChangeForm(forms.ModelForm):
 class AccessInvitationAdminForm(forms.ModelForm):
     """Formulario do admin Django para criar ou editar convites."""
 
+    groups = SystemGroupMultipleChoiceField(
+        label="Grupos e permissoes",
+        queryset=Group.objects.none(),
+        required=True,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
     class Meta:
         model = AccessInvitation
-        fields = ("email", "expires_at", "notes")
+        fields = (
+            "email",
+            "expires_at",
+            "notes",
+            "groups",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["groups"].queryset = get_system_groups_queryset()
 
     def clean_email(self):
         """Restringe convites ao dominio institucional configurado."""
@@ -153,6 +184,13 @@ class AccessInvitationAdminForm(forms.ModelForm):
         if not is_institutional_email(email):
             raise forms.ValidationError("Cadastre apenas e-mails institucionais.")
         return email
+
+    def clean(self):
+        """Exige ao menos um grupo/permissao para o primeiro acesso."""
+        cleaned_data = super().clean()
+        if not cleaned_data.get("groups"):
+            raise forms.ValidationError("Selecione ao menos um grupo ou permissao.")
+        return cleaned_data
 
 
 class AccessInvitationSiteForm(forms.Form):
@@ -184,9 +222,71 @@ class AccessInvitationSiteForm(forms.Form):
         ),
     )
 
+    groups = SystemGroupMultipleChoiceField(
+        label="Grupos e permissoes",
+        help_text="Selecione um ou mais acessos que serao aplicados ao usuario.",
+        queryset=Group.objects.none(),
+        required=True,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["groups"].queryset = get_system_groups_queryset()
+
     def clean_email(self):
         """Normaliza e valida o e-mail institucional do convidado."""
         email = self.cleaned_data["email"].strip().lower()
         if not is_institutional_email(email):
             raise forms.ValidationError("Cadastre apenas e-mails institucionais.")
         return email
+
+    def clean(self):
+        """Exige ao menos um grupo/permissao para liberar o primeiro acesso."""
+        cleaned_data = super().clean()
+        if not cleaned_data.get("groups"):
+            raise forms.ValidationError("Selecione ao menos um grupo ou permissao.")
+        return cleaned_data
+
+
+class ProfileInstitutionalAccessForm(forms.ModelForm):
+    """Formulario para superusuarios ajustarem o perfil de quem ja esta no sistema."""
+
+    groups = SystemGroupMultipleChoiceField(
+        label="Grupos e permissoes",
+        queryset=Group.objects.none(),
+        required=True,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = Profile
+        fields = (
+            "display_name",
+            "institutional_id",
+        )
+        widgets = {
+            "display_name": forms.TextInput(attrs={"class": "", "placeholder": "Nome exibido"}),
+            "institutional_id": forms.TextInput(attrs={"class": "", "placeholder": "Matricula, SIAPE ou RA"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["groups"].queryset = get_system_groups_queryset()
+        if self.instance and self.instance.pk:
+            self.fields["groups"].initial = self.instance.user.groups.filter(
+                name__in=[group.name for group in get_system_groups_queryset()]
+            )
+
+    def clean(self):
+        """Exige ao menos um grupo/permissao para pessoas cadastradas."""
+        cleaned_data = super().clean()
+        if not cleaned_data.get("groups"):
+            raise forms.ValidationError("Selecione ao menos um grupo ou permissao.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        """Salva os dados complementares e aplica os grupos ao usuario."""
+        profile = super().save(commit=commit)
+        set_user_system_groups(profile.user, list(self.cleaned_data["groups"]))
+        return profile

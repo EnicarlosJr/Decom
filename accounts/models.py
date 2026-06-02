@@ -5,6 +5,7 @@ from datetime import timedelta
 import secrets
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -14,6 +15,60 @@ from django.urls import reverse
 
 # Obtém o modelo de usuário (pode ser customizado no projeto)
 User = get_user_model()
+
+
+LANDING_MANAGER_GROUP = "Editores da landing page"
+SYSTEM_GROUP_NAMES = (
+    "Alunos",
+    "Professores",
+    "Tecnicos administrativos",
+    "Chefes de departamento",
+    "Coordenadores de curso",
+    "Coordenadores de estagio",
+    "Coordenadores de TCC 1",
+    "Coordenadores de TCC 2",
+    LANDING_MANAGER_GROUP,
+)
+
+SYSTEM_GROUP_LABELS = {
+    "Alunos": "Aluno",
+    "Professores": "Professor",
+    "Tecnicos administrativos": "Tecnico administrativo",
+    "Chefes de departamento": "Chefe de departamento",
+    "Coordenadores de curso": "Coordenador de curso",
+    "Coordenadores de estagio": "Coordenador de estagio",
+    "Coordenadores de TCC 1": "Coordenador de TCC 1",
+    "Coordenadores de TCC 2": "Coordenador de TCC 2",
+    LANDING_MANAGER_GROUP: "Editor da landing page",
+}
+
+
+def get_system_group_label(group_name):
+    """Retorna o rotulo singular exibido para um grupo do sistema."""
+    return SYSTEM_GROUP_LABELS.get(group_name, group_name)
+
+
+def ensure_system_groups():
+    """Garante que os grupos usados como permissoes do sistema existam."""
+    groups = {}
+    for group_name in SYSTEM_GROUP_NAMES:
+        groups[group_name], _ = Group.objects.get_or_create(name=group_name)
+    return groups
+
+
+def get_system_groups_queryset():
+    """Retorna os grupos que representam permissoes do sistema."""
+    ensure_system_groups()
+    return Group.objects.filter(name__in=SYSTEM_GROUP_NAMES).order_by("name")
+
+
+def set_user_system_groups(user, selected_groups):
+    """Substitui apenas os grupos gerenciados pelo portal para um usuario."""
+    current_managed_groups = user.groups.filter(name__in=SYSTEM_GROUP_NAMES)
+    if current_managed_groups.exists():
+        user.groups.remove(*current_managed_groups)
+    if selected_groups:
+        user.groups.add(*selected_groups)
 
 
 def is_institutional_email(email):
@@ -40,9 +95,7 @@ def user_can_manage_landing_content(user):
     if user.is_staff:
         return True
 
-    # Verifica permissão no perfil
-    profile = getattr(user, "profile", None)
-    return bool(profile and profile.can_manage_landing_page)
+    return user.groups.filter(name=LANDING_MANAGER_GROUP).exists()
 
 
 class Profile(models.Model):
@@ -62,22 +115,6 @@ class Profile(models.Model):
 
     # Matrícula institucional (SIAPE, RA, etc.)
     institutional_id = models.CharField("matricula ou SIAPE", max_length=30, blank=True)
-
-    # Flags de papéis do usuário
-    is_student = models.BooleanField("aluno", default=False)
-    is_professor = models.BooleanField("professor", default=False)
-    is_technician = models.BooleanField("tecnico administrativo", default=False)
-    is_department_head = models.BooleanField("chefe de departamento", default=False)
-    is_course_coordinator = models.BooleanField("coordenador de curso", default=False)
-    is_internship_coordinator = models.BooleanField("coordenador de estagio", default=False)
-    is_tcc1_coordinator = models.BooleanField("coordenador de TCC 1", default=False)
-    is_tcc2_coordinator = models.BooleanField("coordenador de TCC 2", default=False)
-
-    # Permissão específica
-    can_manage_landing_page = models.BooleanField(
-        "pode gerenciar landing page",
-        default=False,
-    )
 
     # Datas automáticas
     created_at = models.DateTimeField(auto_now_add=True)
@@ -103,29 +140,13 @@ class Profile(models.Model):
 
     @property
     def role_labels(self):
-        """
-        Retorna lista legível dos papéis ativos do usuário.
-        Ex: ["Aluno", "Professor"]
-        """
-        labels = []
-
-        options = [
-            (self.is_student, "Aluno"),
-            (self.is_professor, "Professor"),
-            (self.is_technician, "Tecnico administrativo"),
-            (self.is_department_head, "Chefe de departamento"),
-            (self.is_course_coordinator, "Coordenador de curso"),
-            (self.is_internship_coordinator, "Coordenador de estagio"),
-            (self.is_tcc1_coordinator, "Coordenador de TCC 1"),
-            (self.is_tcc2_coordinator, "Coordenador de TCC 2"),
+        """Retorna os grupos/permissoes do sistema ativos para o usuario."""
+        return [
+            get_system_group_label(group_name)
+            for group_name in self.user.groups.filter(name__in=SYSTEM_GROUP_NAMES)
+            .order_by("name")
+            .values_list("name", flat=True)
         ]
-
-        # Adiciona apenas os papéis ativos
-        for enabled, label in options:
-            if enabled:
-                labels.append(label)
-
-        return labels
 
 
 class AccessInvitation(models.Model):
@@ -141,6 +162,14 @@ class AccessInvitation(models.Model):
 
     # Observações opcionais
     notes = models.TextField("observacoes", blank=True)
+
+    # Grupos/permissoes que serao aplicados quando o link for aceito
+    groups = models.ManyToManyField(
+        Group,
+        blank=True,
+        related_name="access_invitations",
+        verbose_name="grupos e permissoes",
+    )
 
     # Quem enviou o convite
     invited_by = models.ForeignKey(
@@ -245,8 +274,22 @@ class AccessInvitation(models.Model):
         """Verifica se ainda pode ser usado."""
         return self.accepted_at is None and not self.is_expired
 
+    @property
+    def role_labels(self):
+        """Retorna os grupos/permissoes definidos para o futuro usuario."""
+        return [
+            get_system_group_label(group_name)
+            for group_name in self.groups.order_by("name").values_list("name", flat=True)
+        ]
+
+    def apply_roles_to_user(self, user):
+        """Aplica os grupos/permissoes do link de primeiro acesso ao usuario."""
+        Profile.objects.get_or_create(user=user)
+        set_user_system_groups(user, list(self.groups.all()))
+
     def mark_as_accepted(self, user):
         """Marca convite como aceito."""
+        self.apply_roles_to_user(user)
         self.accepted_user = user
         self.accepted_at = timezone.now()
         self.save(update_fields=["accepted_user", "accepted_at", "updated_at"])
@@ -257,6 +300,14 @@ class AccessInvitation(models.Model):
         self.expires_at = timezone.now() + timedelta(days=days)
         self.sent_at = None
         self.save(update_fields=["expires_at", "sent_at", "updated_at"])
+
+    def regenerate_link(self):
+        """Gera um novo token e renova a validade do convite."""
+        days = getattr(settings, "INVITATION_TTL_DAYS", 7)
+        self.token = secrets.token_urlsafe(32)
+        self.expires_at = timezone.now() + timedelta(days=days)
+        self.sent_at = None
+        self.save(update_fields=["token", "expires_at", "sent_at", "updated_at"])
 
 
     def build_acceptance_url(self, request=None):

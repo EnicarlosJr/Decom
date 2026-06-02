@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase, override_settings
@@ -13,7 +14,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 
 from .adapters import InstitutionalSocialAccountAdapter
 from .invitations import PENDING_INVITATION_SESSION_KEY
-from .models import AccessInvitation, LoginCode
+from .models import AccessInvitation, LoginCode, Profile
 
 
 User = get_user_model()
@@ -72,6 +73,10 @@ class InvitationFlowTests(TestCase):
             email="convidado@ufvjm.edu.br",
             invited_by=self.admin_user,
         )
+        self.professors_group = Group.objects.get(name="Professores")
+        self.course_coordinators_group = Group.objects.get(name="Coordenadores de curso")
+        self.students_group = Group.objects.get(name="Alunos")
+        self.landing_editors_group = Group.objects.get(name="Editores da landing page")
 
     def test_accept_invitation_stashes_token_in_session(self):
         response = self.client.get(
@@ -106,7 +111,7 @@ class InvitationFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Este convite expirou")
+        self.assertContains(response, "Este link expirou")
 
     def test_staff_panel_creates_invitation_and_sends_email(self):
         self.client.force_login(self.admin_user)
@@ -116,14 +121,36 @@ class InvitationFlowTests(TestCase):
             {
                 "email": "novo-admin@ufvjm.edu.br",
                 "notes": "Convite pela interface do portal",
+                "groups": [self.professors_group.id],
             },
         )
 
         self.assertRedirects(response, reverse("accounts:invitation_panel"))
         invitation = AccessInvitation.objects.get(email="novo-admin@ufvjm.edu.br")
         self.assertEqual(invitation.invited_by, self.admin_user)
+        self.assertTrue(invitation.groups.filter(name="Professores").exists())
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn(invitation.token, mail.outbox[0].body)
+
+    def test_accepting_invitation_applies_roles_to_profile(self):
+        user = User.objects.create_user(
+            username="docente",
+            email=self.invitation.email,
+            is_active=True,
+        )
+        user.set_unusable_password()
+        user.save()
+        self.invitation.groups.set([self.professors_group, self.course_coordinators_group])
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("accounts:accept_invitation", kwargs={"token": self.invitation.token})
+        )
+
+        self.assertRedirects(response, reverse("accounts:dashboard"))
+        user.profile.refresh_from_db()
+        self.assertTrue(user.groups.filter(name="Professores").exists())
+        self.assertTrue(user.groups.filter(name="Coordenadores de curso").exists())
 
     def test_non_staff_cannot_access_staff_panel(self):
         user = User.objects.create_user(
@@ -141,6 +168,7 @@ class InvitationFlowTests(TestCase):
 
     def test_staff_can_resend_invitation_from_site_panel(self):
         self.client.force_login(self.admin_user)
+        original_token = self.invitation.token
 
         response = self.client.post(
             reverse("accounts:resend_invitation", args=[self.invitation.id]),
@@ -149,7 +177,140 @@ class InvitationFlowTests(TestCase):
         self.assertRedirects(response, reverse("accounts:invitation_panel"))
         self.assertEqual(len(mail.outbox), 1)
         self.invitation.refresh_from_db()
+        self.assertNotEqual(self.invitation.token, original_token)
+        self.assertIn(self.invitation.token, mail.outbox[0].body)
+        self.assertNotIn(original_token, mail.outbox[0].body)
         self.assertIsNotNone(self.invitation.sent_at)
+
+    def test_superuser_can_update_registered_person_profile(self):
+        self.admin_user.is_superuser = True
+        self.admin_user.save(update_fields=["is_superuser"])
+        person = User.objects.create_user(
+            username="pessoa",
+            email="pessoa@ufvjm.edu.br",
+            is_active=True,
+        )
+        person.set_unusable_password()
+        person.save()
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("accounts:invitation_panel"),
+            {
+                "action": "update_profile",
+                "user_id": person.id,
+                f"profile_{person.id}-display_name": "Pessoa Teste",
+                f"profile_{person.id}-institutional_id": "SIAPE-123",
+                f"profile_{person.id}-groups": [
+                    self.students_group.id,
+                    self.landing_editors_group.id,
+                ],
+            },
+        )
+
+        self.assertRedirects(response, reverse("accounts:invitation_panel"))
+        person.profile.refresh_from_db()
+        self.assertEqual(person.profile.display_name, "Pessoa Teste")
+        self.assertEqual(person.profile.institutional_id, "SIAPE-123")
+        self.assertTrue(person.groups.filter(name="Alunos").exists())
+        self.assertTrue(person.groups.filter(name="Editores da landing page").exists())
+
+    def test_staff_panel_consolidates_user_and_invitation_by_email(self):
+        person = User.objects.create_user(
+            username="duplicado",
+            email="duplicado@ufvjm.edu.br",
+            is_active=True,
+        )
+        person.set_unusable_password()
+        person.save()
+        profile, _ = Profile.objects.get_or_create(user=person)
+        profile.display_name = "Pessoa Consolidada"
+        profile.save(update_fields=["display_name"])
+        AccessInvitation.objects.create(
+            email=person.email,
+            invited_by=self.admin_user,
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("accounts:invitation_panel"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "duplicado@ufvjm.edu.br", count=1)
+
+    def test_staff_panel_displays_group_labels_in_singular(self):
+        person = User.objects.create_user(
+            username="rotulo",
+            email="rotulo@ufvjm.edu.br",
+            is_active=True,
+        )
+        person.set_unusable_password()
+        person.save()
+        person.groups.add(self.students_group, self.professors_group)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(
+            reverse("accounts:invitation_panel"),
+            {"q": person.email},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Aluno")
+        self.assertContains(response, "Professor")
+        self.assertNotContains(response, "Alunos")
+        self.assertNotContains(response, "Professores")
+
+    def test_staff_panel_hides_link_actions_for_accepted_invitation(self):
+        person = User.objects.create_user(
+            username="aceito",
+            email="aceito@ufvjm.edu.br",
+            is_active=True,
+        )
+        person.set_unusable_password()
+        person.save()
+        invitation = AccessInvitation.objects.create(
+            email=person.email,
+            invited_by=self.admin_user,
+        )
+        invitation.mark_as_accepted(person)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(
+            reverse("accounts:invitation_panel"),
+            {"q": person.email},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Primeiro acesso")
+        self.assertContains(response, "Aceito")
+        self.assertNotContains(response, "Abrir link")
+        self.assertNotContains(response, "Reenviar Link")
+        self.assertNotContains(response, "Renovar Link")
+        self.assertNotContains(response, "Validade:")
+        self.assertNotContains(response, "Ultimo envio:")
+
+    def test_staff_without_superuser_cannot_update_registered_person_profile(self):
+        person = User.objects.create_user(
+            username="sem-permissao",
+            email="sem-permissao@ufvjm.edu.br",
+            is_active=True,
+        )
+        person.set_unusable_password()
+        person.save()
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("accounts:invitation_panel"),
+            {
+                "action": "update_profile",
+                "user_id": person.id,
+                "display_name": "Alterado",
+                "groups": [self.professors_group.id],
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        person.profile.refresh_from_db()
+        self.assertNotEqual(person.profile.display_name, "Alterado")
 
     def test_accept_invitation_accepts_high_entropy_prefix_token(self):
         truncated_token = f"{self.invitation.token[:37]}="
@@ -174,7 +335,7 @@ class InvitationFlowTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 404)
-        self.assertContains(response, "nao corresponde a um convite valido", status_code=404)
+        self.assertContains(response, "nao corresponde a uma autorizacao valida", status_code=404)
 
     def test_renew_keeps_same_token(self):
         original_token = self.invitation.token
@@ -230,8 +391,7 @@ class LoginPageRenderingTests(TestCase):
         )
         user.set_unusable_password()
         user.save()
-        user.profile.can_manage_landing_page = True
-        user.profile.save(update_fields=["can_manage_landing_page", "updated_at"])
+        user.groups.add(Group.objects.get(name="Editores da landing page"))
         self.client.force_login(user)
 
         response = self.client.get(reverse("accounts:dashboard"))
@@ -317,5 +477,5 @@ class InstitutionalSocialAccountAdapterTests(TestCase):
         self.assertEqual(response.url, reverse("accounts:login_request"))
         self.assertEqual(
             [str(message) for message in get_messages(request)],
-            ["Seu e-mail institucional ainda nao foi autorizado. Solicite um convite a um administrador do sistema."],
+            ["Seu e-mail institucional ainda nao foi autorizado. Solicite a liberacao a um administrador do sistema."],
         )
