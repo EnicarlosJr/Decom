@@ -65,14 +65,14 @@
 
             <div class="col-12 col-md-6 col-lg-3 mb-3">
                 <p class="text-bold text-down-01 mb-1">
-                    Tipo de acesso
+                    Perfil institucional
                 </p>
 
                 <p class="mb-0">
-                    {% if user.is_staff %}
-                        Administrativo
+                    {% if role_labels %}
+                        {{ role_labels|join:", " }}
                     {% else %}
-                        Usuário
+                        Nao definido
                     {% endif %}
                 </p>
             </div>

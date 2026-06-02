@@ -33,6 +33,7 @@ class AccessInvitationAdmin(admin.ModelAdmin):
     form = AccessInvitationAdminForm
     list_display = (
         "email",
+        "roles_summary",
         "status_badge",
         "invited_by",
         "sent_at",
@@ -61,6 +62,7 @@ class AccessInvitationAdmin(admin.ModelAdmin):
                     "email",
                     "expires_at",
                     "notes",
+                    "groups",
                     "acceptance_link",
                     "token",
                 )
@@ -86,11 +88,17 @@ class AccessInvitationAdmin(admin.ModelAdmin):
         """Exibe um atalho de aceite no detalhe do convite."""
         if not obj.pk:
             return "O link sera gerado apos salvar."
+        acceptance_url = obj.build_acceptance_url(request=None)
         return format_html(
             '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
-            obj.get_acceptance_path(),
-            obj.get_acceptance_path(),
+            acceptance_url,
+            acceptance_url,
         )
+
+    @admin.display(description="Grupos e permissoes")
+    def roles_summary(self, obj):
+        """Resume os grupos/permissoes configurados no link."""
+        return ", ".join(obj.role_labels) or "-"
 
     @admin.display(description="Status")
     def status_badge(self, obj):
@@ -131,16 +139,15 @@ class AccessInvitationAdmin(admin.ModelAdmin):
 
     @admin.action(description="Reenviar convite por e-mail")
     def resend_selected_invitations(self, request, queryset):
-        """Acao em lote para reenviar convites pendentes."""
+        """Acao em lote para gerar novos links e reenviar convites pendentes."""
         sent = 0
         for invitation in queryset:
             if invitation.accepted_at is not None:
                 continue
-            if invitation.is_expired:
-                invitation.renew()
+            invitation.regenerate_link()
             invitation.send_invitation_email(request)
             sent += 1
-        self.message_user(request, f"{sent} convite(s) reenviado(s).")
+        self.message_user(request, f"{sent} novo(s) link(s) de convite enviado(s).")
 
 
 @admin.register(LoginCode)

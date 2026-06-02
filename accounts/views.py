@@ -18,8 +18,21 @@ from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
 from .invitations import clear_pending_invitation, get_valid_pending_invitation, set_pending_invitation
-from .forms import AccessInvitationSiteForm, RequestLoginCodeForm, VerifyLoginCodeForm
-from .models import AccessInvitation, LoginCode, user_can_manage_landing_content
+from .forms import (
+    AccessInvitationSiteForm,
+    ProfileInstitutionalAccessForm,
+    RequestLoginCodeForm,
+    VerifyLoginCodeForm,
+)
+from .models import (
+    AccessInvitation,
+    LANDING_MANAGER_GROUP,
+    LoginCode,
+    Profile,
+    SYSTEM_GROUP_NAMES,
+    get_system_group_label,
+    user_can_manage_landing_content,
+)
 
 
 User = get_user_model()
@@ -75,9 +88,69 @@ def _build_invitation_rows(request, invitations):
                 "status_label": status_label,
                 "status_tone": status_tone,
                 "can_resend": invitation.accepted_at is None,
+                "role_labels": invitation.role_labels,
             }
         )
     return rows
+
+
+def _build_user_rows(users):
+    """Prepara pessoas cadastradas e seus formularios de perfil institucional."""
+    rows = []
+    for user in users:
+        profile = getattr(user, "profile", None)
+        if profile is None:
+            continue
+        rows.append(
+            {
+                "obj": user,
+                "profile": profile,
+                "role_labels": profile.role_labels,
+                "group_labels": [
+                    get_system_group_label(group.name)
+                    for group in user.groups.all()
+                    if group.name in SYSTEM_GROUP_NAMES
+                ],
+                "form": ProfileInstitutionalAccessForm(
+                    instance=profile,
+                    prefix=f"profile_{user.pk}",
+                ),
+            }
+        )
+    return rows
+
+
+def _build_people_rows(user_rows, invitation_rows):
+    """Une usuarios e convites por e-mail para evitar repeticao na interface."""
+    people_by_email = {}
+
+    for row in user_rows:
+        user = row["obj"]
+        email = (user.email or "").lower()
+        if not email:
+            continue
+        people_by_email[email] = {
+            "email": user.email,
+            "user_row": row,
+            "invitation_row": None,
+        }
+
+    for row in invitation_rows:
+        invitation = row["obj"]
+        email = (invitation.email or "").lower()
+        if not email:
+            continue
+        person = people_by_email.setdefault(
+            email,
+            {
+                "email": invitation.email,
+                "user_row": None,
+                "invitation_row": None,
+            },
+        )
+        person["invitation_row"] = row
+
+    return sorted(people_by_email.values(), key=lambda person: person["email"].lower())
 
 
 def _build_access_modules(user, profile):
@@ -87,14 +160,14 @@ def _build_access_modules(user, profile):
     if user.is_staff:
         modules.append(
             {
-                "title": "Convites",
-                "description": "Criacao, reenvio e acompanhamento de primeiro acesso.",
+                "title": "Pessoas do sistema",
+                "description": "Cadastro, links de primeiro acesso e perfis institucionais.",
                 "status": "Equipe",
                 "tone": "info",
-                "action_label": "Abrir painel",
+                "action_label": "Gerenciar pessoas",
                 "action_url": reverse("accounts:invitation_panel"),
                 "button_tone": "secondary",
-                "icon": "fa-envelope-open-text",
+                "icon": "fa-users-cog",
             }
         )
 
@@ -196,7 +269,7 @@ def accept_invitation(request, token):
             if invitation.accepted_at is None:
                 invitation.mark_as_accepted(request.user)
             clear_pending_invitation(request)
-            messages.success(request, "Convite validado com sucesso.")
+            messages.success(request, "Primeiro acesso validado com sucesso.")
             return redirect("accounts:dashboard")
         messages.error(
             request,
@@ -335,18 +408,37 @@ def dashboard(request):
 
 
 def invitation_panel(request):
-    """Tela operacional para criar, filtrar e reenviar convites."""
+    """Tela operacional para gerenciar pessoas, perfis e convites."""
     access_check = _ensure_staff_user(request)
     if access_check is not None:
         return access_check
 
     now = timezone.now()
+    form = AccessInvitationSiteForm()
 
     if request.method == "POST":
-        form = AccessInvitationSiteForm(request.POST)
-        if form.is_valid():
+        action = request.POST.get("action", "create_invitation")
+        if action == "update_profile":
+            if not request.user.is_superuser:
+                raise PermissionDenied
+            user = get_object_or_404(User, pk=request.POST.get("user_id"), is_active=True)
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile_form = ProfileInstitutionalAccessForm(
+                request.POST,
+                instance=profile,
+                prefix=f"profile_{user.pk}",
+            )
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, f"Perfil institucional atualizado para {user.email}.")
+                return redirect("accounts:invitation_panel")
+            messages.error(request, profile_form.non_field_errors()[0] if profile_form.non_field_errors() else "Confira os dados do perfil institucional.")
+        else:
+            form = AccessInvitationSiteForm(request.POST)
+        if action != "update_profile" and form.is_valid():
             email = form.cleaned_data["email"]
             notes = form.cleaned_data["notes"].strip()
+            selected_groups = form.cleaned_data["groups"]
             invitation = AccessInvitation.objects.filter(email__iexact=email).first()
 
             if invitation and invitation.accepted_at is not None:
@@ -368,16 +460,21 @@ def invitation_panel(request):
                         invitation.renew()
                     invitation.notes = notes
                     invitation.invited_by = request.user
-                    invitation.save(update_fields=["notes", "invited_by", "updated_at"])
+                    invitation.save(
+                        update_fields=[
+                            "notes",
+                            "invited_by",
+                            "updated_at",
+                        ]
+                    )
+                invitation.groups.set(selected_groups)
 
                 invitation.send_invitation_email(request)
                 messages.success(
                     request,
-                    f"Convite {'enviado' if created else 'reenviado'} para {invitation.email}.",
+                    f"Link de primeiro acesso {'enviado' if created else 'reenviado'} para {invitation.email}.",
                 )
                 return redirect("accounts:invitation_panel")
-    else:
-        form = AccessInvitationSiteForm()
 
     query = request.GET.get("q", "").strip()
     status = request.GET.get("status", "all").strip() or "all"
@@ -394,13 +491,22 @@ def invitation_panel(request):
         filtered_queryset = filtered_queryset.filter(accepted_at__isnull=True, expires_at__lte=now)
 
     invitation_rows = _build_invitation_rows(request, list(filtered_queryset))
+    users_queryset = User.objects.select_related("profile").prefetch_related("groups").order_by("email")
+    if query:
+        users_queryset = users_queryset.filter(email__icontains=query)
+    user_rows = _build_user_rows(list(users_queryset))
+    people_rows = _build_people_rows(user_rows, invitation_rows)
     return render(
         request,
         "accounts/invitation_panel.html",
         {
             "form": form,
             "invitation_rows": invitation_rows,
+            "user_rows": user_rows,
+            "people_rows": people_rows,
+            "people_result_count": len(people_rows),
             "result_count": len(invitation_rows),
+            "user_result_count": len(user_rows),
             "filters": {
                 "query": query,
                 "status": status,
@@ -422,16 +528,15 @@ def resend_invitation(request, invitation_id):
     if invitation.accepted_at is not None:
         messages.error(
             request,
-            "Este convite ja foi aceito e nao precisa de reenvio.",
+            "Este primeiro acesso ja foi concluido e nao precisa de reenvio.",
         )
         return redirect("accounts:invitation_panel")
 
-    if invitation.is_expired:
-        invitation.renew()
+    invitation.regenerate_link()
     invitation.invited_by = request.user
     invitation.save(update_fields=["invited_by", "updated_at"])
     invitation.send_invitation_email(request)
-    messages.success(request, f"Convite reenviado para {invitation.email}.")
+    messages.success(request, f"Novo link de primeiro acesso enviado para {invitation.email}.")
     return redirect("accounts:invitation_panel")
 
 
